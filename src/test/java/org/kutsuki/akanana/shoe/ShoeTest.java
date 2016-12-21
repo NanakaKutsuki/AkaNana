@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,8 +6,8 @@ import org.junit.Test;
 
 public class ShoeTest {
 	private int decks = 8;
-	private int decksPlayed = 6;
-	private AbstractShoe shoe = new AkaNanaShoe(decks, decksPlayed);
+	private int playable = 6 * 52;
+	private AkaNanaShoe shoe = new AkaNanaShoe(decks, playable);
 
 	@Test
 	public void testShoe() {
@@ -53,6 +53,8 @@ public class ShoeTest {
 		}
 
 		// check count - should be zero at the end
+		Card burn = shoe.getShoe().get(0);
+		shoe.count(burn);
 		assertEquals("Wrong count!", 0, shoe.getCount());
 	}
 
@@ -76,12 +78,14 @@ public class ShoeTest {
 		shoe.getNextCard();
 
 		// check count - should be zero at the end
+		Card burn = shoe.getShoe().get(0);
+		shoe.count(burn);
 		assertEquals("Wrong count!", 0, shoe.getCount());
 	}
 
 	@Test
 	public void testSetupShoe() {
-		AbstractShoe fakeShoe = new AkaNanaShoe(decks, decksPlayed, 4, 5, 6);
+		AbstractShoe fakeShoe = new AkaNanaShoe(decks, playable, 4, 5, 6);
 		assertEquals("Wrong Card", 4, fakeShoe.getNextCard().getRank());
 		assertEquals("Wrong Card", 5, fakeShoe.getNextCard().getRank());
 		assertEquals("Wrong Card", 6, fakeShoe.getNextCard().getRank());

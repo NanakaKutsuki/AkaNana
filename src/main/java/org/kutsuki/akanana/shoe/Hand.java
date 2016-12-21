@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -153,7 +153,7 @@ public class Hand implements Serializable {
 
 	// showingRank
 	public int showingRank() {
-		return hand.isEmpty() ? 0 : hand.get(0).getRank();
+		return getSecondCardRank();
 	}
 
 	// size

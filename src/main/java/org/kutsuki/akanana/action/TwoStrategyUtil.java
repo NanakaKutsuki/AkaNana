@@ -4,8 +4,13 @@ package org.kutsuki.akanana.action;
 public class TwoStrategyUtil extends AbstractStrategyUtil {
 	private static final long serialVersionUID = -2052149142484954816L;
 
-	public TwoStrategyUtil(boolean surrenderAllowed) {
+	// private constructor
+	private TwoStrategyUtil(boolean surrenderAllowed) {
 		super(surrenderAllowed);
+	}
+
+	public static TwoStrategyUtil getInstance(boolean surrenderAllowed) {
+		return new TwoStrategyUtil(surrenderAllowed);
 	}
 
 	@Override

@@ -1,18 +1,18 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 public class AkaNanaShoe extends AbstractShoe {
 	private static final long serialVersionUID = 6826306879442040191L;
 
 	// Constructor
-	public AkaNanaShoe(int decks, int decksPlayed) {
-		super(decks, decksPlayed);
+	public AkaNanaShoe(int decks, int playable) {
+		super(decks, playable);
 		setCount(getDecks() * -2);
 		reshuffle();
 	}
 
 	// Constructor
-	public AkaNanaShoe(int decks, int decksPlayed, int... c) {
-		super(decks, decksPlayed, c);
+	public AkaNanaShoe(int decks, int playable, int... c) {
+		super(decks, playable, c);
 		setCount(getDecks() * -2);
 	}
 
@@ -20,7 +20,11 @@ public class AkaNanaShoe extends AbstractShoe {
 	@Override
 	public Card getNextCard() {
 		Card card = getCard();
+		count(card);
+		return card;
+	}
 
+	public void count(Card card) {
 		if (card.getRank() <= 6) {
 			addCount();
 		} else if (card.getRank() >= 10) {
@@ -28,8 +32,6 @@ public class AkaNanaShoe extends AbstractShoe {
 		} else if (card.getRank() == 7 && (card.getSuit() == 'd' || card.getSuit() == 'h')) {
 			addCount();
 		}
-
-		return card;
 	}
 
 	// getHiddenCardForDealer
@@ -54,7 +56,8 @@ public class AkaNanaShoe extends AbstractShoe {
 		boolean reshuffled = super.reshuffle();
 
 		if (reshuffled) {
-			setCount((getDecks() * -2) + getCount());
+			// assume we don't count the burn card
+			setCount(getDecks() * -2);
 		}
 
 		return reshuffled;

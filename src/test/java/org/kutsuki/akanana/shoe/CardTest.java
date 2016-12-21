@@ -1,9 +1,9 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.kutsuki.akanana.game.Card;
+import org.kutsuki.akanana.shoe.Card;
 
 public class CardTest {
 	@Test

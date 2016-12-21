@@ -2,7 +2,7 @@ package org.kutsuki.akanana.action;
 
 import java.io.Serializable;
 
-import org.kutsuki.akanana.game.Hand;
+import org.kutsuki.akanana.shoe.Hand;
 
 public class StrategyUtil implements Serializable {
 	private static final long serialVersionUID = -7034599234666600201L;
@@ -11,9 +11,9 @@ public class StrategyUtil implements Serializable {
 
 	public StrategyUtil(boolean surrenderAllowed, int decks) {
 		if (decks == 2) {
-			this.strategyUtil = new TwoStrategyUtil(surrenderAllowed);
+			this.strategyUtil = TwoStrategyUtil.getInstance(surrenderAllowed);
 		} else {
-			this.strategyUtil = new FourStrategyUtil(surrenderAllowed);
+			this.strategyUtil = FourStrategyUtil.getInstance(surrenderAllowed);
 		}
 	}
 

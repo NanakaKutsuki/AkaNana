@@ -1,10 +1,12 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import org.kutsuki.akanana.shoe.Card;
+import org.kutsuki.akanana.shoe.Hand;
 
 public class HandTest {
 	@Test

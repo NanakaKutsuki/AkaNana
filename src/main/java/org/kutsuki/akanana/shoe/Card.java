@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 import java.io.Serializable;
 
@@ -24,35 +24,52 @@ public class Card implements Serializable {
 
 	// toString
 	public String toString() {
-		StrBuilder sb = new StrBuilder();
-
-		if (rank == 10) {
-			sb.append(TEN);
-		} else if (rank == 11) {
-			sb.append(JACK);
-		} else if (rank == 12) {
-			sb.append(QUEEN);
-		} else if (rank == 13) {
-			sb.append(KING);
-		} else if (rank == 14) {
-			sb.append(ACE);
-		} else {
-			sb.append(rank);
-		}
-
-		sb.append(suit);
-		return sb.toString();
+		return getRankString(true);
 	}
 
 	// getRank
 	public int getRank() {
+		int r = rank;
+
 		if (rank >= 10 && rank < 14) {
-			return 10;
+			r = 10;
 		} else if (rank == 14) {
-			return 11;
-		} else {
-			return rank;
+			r = 11;
 		}
+
+		return r;
+	}
+
+	// getRankChar
+	public String getRankString(boolean printSuit) {
+		StrBuilder sb = new StrBuilder();
+
+		switch (rank) {
+		case 10:
+			sb.append(TEN);
+			break;
+		case 11:
+			sb.append(JACK);
+			break;
+		case 12:
+			sb.append(QUEEN);
+			break;
+		case 13:
+			sb.append(KING);
+			break;
+		case 14:
+			sb.append(ACE);
+			break;
+		default:
+			sb.append(rank);
+			break;
+		}
+
+		if (printSuit) {
+			sb.append(suit);
+		}
+
+		return sb.toString();
 	}
 
 	// getSuit

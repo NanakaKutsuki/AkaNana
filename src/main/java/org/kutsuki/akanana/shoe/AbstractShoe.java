@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.game;
+package org.kutsuki.akanana.shoe;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,10 +14,9 @@ public abstract class AbstractShoe implements Serializable {
 
 	private int count;
 	private int decks;
-	private int decksPlayed;
 	private int hiddenPoint;
 	private int index;
-	private int reshuffle;
+	private int playable;
 	private int rollback;
 	private int rollbackCount;
 	private List<Card> shoe;
@@ -28,13 +27,12 @@ public abstract class AbstractShoe implements Serializable {
 	public abstract Card getHiddenCardForDealer();
 
 	// constructor
-	public AbstractShoe(int decks, int decksPlayed) {
+	public AbstractShoe(int decks, int playable) {
 		this.decks = decks;
-		this.decksPlayed = decksPlayed;
+		this.playable = playable;
 		this.hiddenPoint = 0;
 		this.random = RandomAdaptor.createAdaptor(new MersenneTwister());
-		this.reshuffle = 52 * decksPlayed;
-		this.index = reshuffle + 1;
+		this.index = playable + 1;
 		this.rollback = 0;
 		this.count = 0;
 		this.shoe = new ArrayList<Card>();
@@ -54,12 +52,11 @@ public abstract class AbstractShoe implements Serializable {
 	}
 
 	// constructor
-	public AbstractShoe(int decks, int decksPlayed, int... c) {
+	public AbstractShoe(int decks, int playable, int... c) {
 		this.decks = decks;
-		this.decksPlayed = decksPlayed;
+		this.playable = playable;
 		this.hiddenPoint = 0;
 		this.random = RandomAdaptor.createAdaptor(new MersenneTwister());
-		this.reshuffle = 52 * decksPlayed;
 		this.index = 0;
 		this.rollback = 0;
 		this.count = 0;
@@ -120,13 +117,12 @@ public abstract class AbstractShoe implements Serializable {
 		boolean reshuffled = false;
 
 		// avg games for 2 deck 0 and other players is 9.95
-		if (index > reshuffle) {
+		if (index > playable) {
 			Collections.shuffle(shoe, random);
 			index = 0;
 			rollback = 0;
 			count = 0;
 			hiddenPoint = 0;
-			reshuffle = 52 * decksPlayed;
 
 			// burn one card
 			getNextCard();

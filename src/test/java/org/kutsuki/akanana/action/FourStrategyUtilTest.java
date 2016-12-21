@@ -3,8 +3,8 @@ package org.kutsuki.akanana.action;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.kutsuki.akanana.game.Card;
-import org.kutsuki.akanana.game.Hand;
+import org.kutsuki.akanana.shoe.Card;
+import org.kutsuki.akanana.shoe.Hand;
 
 public class FourStrategyUtilTest {
 	private StrategyUtil strategyUtil;
