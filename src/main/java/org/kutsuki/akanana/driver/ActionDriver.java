@@ -21,7 +21,7 @@ public class ActionDriver {
     private static final int DECKS = 2;
     private static final int MAX_HANDS = 4;
     private static final int PLAYABLE = 80;
-    private static final int TRIALS = 1000000;
+    private static final int TRIALS = 10;
     private static final String LOCAL = "local";
     // private static final String OUTPUT_PATH = "C://Users//Matcha
     // Green//Desktop//AkaNana//";
