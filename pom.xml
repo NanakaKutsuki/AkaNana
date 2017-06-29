@@ -40,4 +40,5 @@
 			</plugin>
 		</plugins>
 	</build>
+	<name>AkaNana</name>
 </project>

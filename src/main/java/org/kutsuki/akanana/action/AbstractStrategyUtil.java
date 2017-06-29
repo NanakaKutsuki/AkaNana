@@ -5,81 +5,81 @@ import java.io.Serializable;
 import org.kutsuki.akanana.shoe.Hand;
 
 public abstract class AbstractStrategyUtil implements Serializable {
-	private static final long serialVersionUID = -6531782837756121281L;
+    private static final long serialVersionUID = -6531782837756121281L;
 
-	private boolean maxHands;
-	private boolean surrenderAllowed;
-	private Hand hand;
-	private int count;
-	private int showing;
+    private boolean maxHands;
+    private boolean surrenderAllowed;
+    private Hand hand;
+    private int count;
+    private int showing;
 
-	protected abstract Action doubleDown();
+    protected abstract Action doubleDown();
 
-	protected abstract Action split(int pair);
+    protected abstract Action split(int pair);
 
-	protected abstract Action stand();
+    protected abstract Action stand();
 
-	protected abstract Action surrender();
+    protected abstract Action surrender();
 
-	public AbstractStrategyUtil(boolean surrenderAllowed) {
-		this.surrenderAllowed = surrenderAllowed;
+    public AbstractStrategyUtil(boolean surrenderAllowed) {
+	this.surrenderAllowed = surrenderAllowed;
+    }
+
+    public Action getAction(Hand hand, int showing, boolean maxHands, int count) {
+	this.maxHands = maxHands;
+	this.count = count;
+	this.hand = hand;
+	this.showing = showing;
+
+	return getSize() == 2 ? surrenderUtil() : stand();
+    }
+
+    private Action surrenderUtil() {
+	Action action = null;
+
+	if (surrenderAllowed) {
+	    action = surrender();
 	}
 
-	public Action getAction(Hand hand, int showing, boolean maxHands, int count) {
-		this.maxHands = maxHands;
-		this.count = count;
-		this.hand = hand;
-		this.showing = showing;
+	return action != null ? action : splitUtil();
+    }
 
-		return getSize() == 2 ? surrenderUtil() : stand();
+    private Action splitUtil() {
+	Action action = null;
+
+	if (!maxHands && hand.getFirstCardRank() == hand.getSecondCardRank()) {
+	    action = split(hand.getFirstCardRank());
 	}
 
-	private Action surrenderUtil() {
-		Action action = null;
+	return action != null ? action : doubleDownUtil();
+    }
 
-		if (surrenderAllowed) {
-			action = surrender();
-		}
+    private Action doubleDownUtil() {
+	Action action = doubleDown();
+	return action != null ? action : stand();
+    }
 
-		return action != null ? action : splitUtil();
-	}
+    protected int getCount() {
+	return count;
+    }
 
-	private Action splitUtil() {
-		Action action = null;
+    protected int getShowing() {
+	return showing;
+    }
 
-		if (!maxHands && hand.getFirstCardRank() == hand.getSecondCardRank()) {
-			action = split(hand.getFirstCardRank());
-		}
+    protected int getSoft() {
+	return hand.getSoft();
+    }
 
-		return action != null ? action : doubleDownUtil();
-	}
+    protected int getSize() {
+	return hand.size();
+    }
 
-	private Action doubleDownUtil() {
-		Action action = doubleDown();
-		return action != null ? action : stand();
-	}
+    protected int getValue() {
+	return hand.getValue();
+    }
 
-	protected int getCount() {
-		return count;
-	}
-
-	protected int getShowing() {
-		return showing;
-	}
-
-	protected int getSoft() {
-		return hand.getSoft();
-	}
-
-	protected int getSize() {
-		return hand.size();
-	}
-
-	protected int getValue() {
-		return hand.getValue();
-	}
-
-	protected boolean isMaxHands() {
-		return maxHands;
-	}
+    protected boolean isMaxHands() {
+	return maxHands;
+    }
 }
