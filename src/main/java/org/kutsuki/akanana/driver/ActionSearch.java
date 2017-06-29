@@ -38,7 +38,7 @@ public class ActionSearch extends AbstractAkaNana {
     }
 
     // run
-    public ActionModel run(int decks, int playable, boolean surrender, int maxHands, int card1, int card2, int showing,
+    public ActionModel run(int decks, int playable, int maxHands, int card1, int card2, int showing,
 	    boolean cardSpecific, Integer count) {
 	initPlayers(maxHands);
 	this.model = new ActionModel();
@@ -48,7 +48,7 @@ public class ActionSearch extends AbstractAkaNana {
 	}
 
 	if (strategyUtil == null) {
-	    this.strategyUtil = new StrategyUtil(surrender, decks);
+	    this.strategyUtil = new StrategyUtil(true, decks);
 	}
 
 	// isPair
@@ -88,6 +88,7 @@ public class ActionSearch extends AbstractAkaNana {
     }
 
     private void runAction(Action action) {
+	setStartingBet(BigDecimal.ONE);
 	setBankroll(BigDecimal.ZERO);
 	setupBet(-100);
 	rollbackShoe(playerHands, dealerHand, shoe);

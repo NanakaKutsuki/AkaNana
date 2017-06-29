@@ -429,7 +429,7 @@ public class ActionSearchTest {
 
 	if (!hand.isBlackjack()) {
 	    as.setShoe(shoe);
-	    as.run(DECKS, PLAYABLE, false, 4, card1, card2, showing, false, count);
+	    as.run(DECKS, PLAYABLE, 4, card1, card2, showing, false, count);
 
 	    assertEquals("Wrong player value", hand.getValue(), as.getPlayerHands().get(0).getValue());
 	    assertEquals("Wrong dealer showing", showing, as.getDealerHand().showingRank());
@@ -444,7 +444,7 @@ public class ActionSearchTest {
     // testFindShoeByCards
     private void testFindShoeByCards(AbstractShoe shoe, int card1, int card2, int showing, Integer count) {
 	as.setShoe(shoe);
-	as.run(DECKS, PLAYABLE, false, 4, card1, card2, showing, true, count);
+	as.run(DECKS, PLAYABLE, 4, card1, card2, showing, true, count);
 
 	if (!((as.getPlayerHands().get(0).getFirstCardRank() == card1
 		&& as.getPlayerHands().get(0).getSecondCardRank() == card2)

@@ -5,20 +5,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.kutsuki.akanana.shoe.Card;
-import org.kutsuki.akanana.shoe.Hand;
 
 public class HandTest {
     @Test
     public void testHand() {
 	Hand hand = new Hand();
-	hand.addCard(new Card(14, 'c'));
 	hand.addCard(new Card(10, 'c'));
+	hand.addCard(new Card(14, 'c'));
 
 	assertEquals("Unexpected Size", hand.size(), 2);
 	assertEquals("Unexpected Showing Rank", hand.showingRank(), 11);
 	assertEquals("Unexpected Soft", hand.getSoft(), 10);
-	assertEquals("Unexpected String", hand.toString(), "Ac Tc");
+	assertEquals("Unexpected String", hand.toString(), "Tc Ac");
 	assertEquals("Unexpected Value", hand.getValue(), 21);
 	assertTrue("Expected Blackjack", hand.isBlackjack());
 
@@ -30,7 +28,7 @@ public class HandTest {
 	hand.addCard(new Card(12, 'c'));
 
 	assertEquals("Unexpected Size", hand.size(), 4);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 11);
+	assertEquals("Unexpected Showing Rank", hand.showingRank(), 5);
 	assertEquals("Unexpected Soft", hand.getSoft(), 0);
 	assertEquals("Unexpected String", hand.toString(), "Ac 5c Jc Qc");
 	assertEquals("Unexpected Value", hand.getValue(), 26);
@@ -50,14 +48,14 @@ public class HandTest {
 
 	clear(hand);
 
-	hand.addCard(new Card(14, 'c'));
 	hand.addCard(new Card(10, 'c'));
+	hand.addCard(new Card(14, 'c'));
 	hand.setSplit(true);
 
 	assertEquals("Unexpected Size", hand.size(), 2);
 	assertEquals("Unexpected Showing Rank", hand.showingRank(), 11);
 	assertEquals("Unexpected Soft", hand.getSoft(), 10);
-	assertEquals("Unexpected String", hand.toString(), "Ac Tc");
+	assertEquals("Unexpected String", hand.toString(), "Tc Ac");
 	assertEquals("Unexpected Value", hand.getValue(), 21);
 	assertFalse("Unexpected Blackjack", hand.isBlackjack());
 
@@ -68,7 +66,7 @@ public class HandTest {
 	hand.addCard(new Card(10, 'c'));
 
 	assertEquals("Unexpected Size", hand.size(), 3);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 6);
+	assertEquals("Unexpected Showing Rank", hand.showingRank(), 5);
 	assertEquals("Unexpected Soft", hand.getSoft(), 0);
 	assertEquals("Unexpected String", hand.toString(), "6c 5c Tc");
 	assertEquals("Unexpected Value", hand.getValue(), 21);
@@ -90,7 +88,6 @@ public class HandTest {
 	// clear
 	hand.clear();
 	assertEquals("Unexpected Size", hand.size(), 0);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 0);
 	assertEquals("Unexpected Soft", hand.getSoft(), 0);
 	assertEquals("Unexpected String", hand.toString(), "");
 	assertEquals("Unexpected Value", hand.getValue(), 0);
