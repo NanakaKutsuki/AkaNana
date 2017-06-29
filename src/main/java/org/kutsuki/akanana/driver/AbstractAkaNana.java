@@ -20,10 +20,6 @@ public abstract class AbstractAkaNana implements Serializable {
     private BigDecimal bankroll, bet, startingBet, totalBet;
     private int numHands, startingCount;
 
-    public BigDecimal getBet() {
-	return bet;
-    }
-
     public abstract StrategyUtil getStrategyUtil();
 
     public abstract void setupBet(int count);
