@@ -21,13 +21,12 @@ public class ActionSearchTest {
     private static final int PLAYABLE = 4 * DECKS;
     private ActionSearch as;
     private ActionSearch s;
+    private StrategyUtil basic;
 
     public ActionSearchTest() {
-	StrategyUtil basic = new StrategyUtil(true, DECKS);
-	StrategyUtil surrender = new StrategyUtil(true, DECKS);
-
-	this.as = new ActionSearch(basic);
-	this.s = new ActionSearch(surrender);
+	this.basic = new StrategyUtil(true, DECKS);
+	this.as = new ActionSearch(0, 0, 0, false, null);
+	this.s = new ActionSearch(0, 0, 0, false, null);
     }
 
     @Test
@@ -88,6 +87,7 @@ public class ActionSearchTest {
 	for (int i = 0; i < 3; i++) {
 	    playerHands.add(new Hand());
 	}
+	as.setSettings(0, 0, 0, false, null, shoe, basic);
 
 	// Forced Stand Player Win by dealer bust
 	as.setStartingBet(BET);
@@ -375,8 +375,8 @@ public class ActionSearchTest {
 	}
 
 	s.setStartingBet(BET);
-	s.initPlayers(3);
-	s.setShoe(shoe);
+	s.initPlayers();
+	s.setSettings(0, 0, 0, false, null, shoe, basic);
 
 	for (int value = 4; value <= 20; value++) {
 	    for (int showing = 2; showing <= 11; showing++) {
@@ -428,8 +428,8 @@ public class ActionSearchTest {
 	}
 
 	if (!hand.isBlackjack()) {
-	    as.setShoe(shoe);
-	    as.run(DECKS, PLAYABLE, 4, card1, card2, showing, false, count);
+	    as.setSettings(card1, card2, showing, false, count, shoe, basic);
+	    as.call();
 
 	    assertEquals("Wrong player value", hand.getValue(), as.getPlayerHands().get(0).getValue());
 	    assertEquals("Wrong dealer showing", showing, as.getDealerHand().showingRank());
@@ -443,8 +443,8 @@ public class ActionSearchTest {
 
     // testFindShoeByCards
     private void testFindShoeByCards(AbstractShoe shoe, int card1, int card2, int showing, Integer count) {
-	as.setShoe(shoe);
-	as.run(DECKS, PLAYABLE, 4, card1, card2, showing, true, count);
+	as.setSettings(card1, card2, showing, true, count, shoe, basic);
+	as.call();
 
 	if (!((as.getPlayerHands().get(0).getFirstCardRank() == card1
 		&& as.getPlayerHands().get(0).getSecondCardRank() == card2)

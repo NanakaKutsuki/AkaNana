@@ -2,8 +2,6 @@ package org.kutsuki.akanana.shoe;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang3.text.StrBuilder;
-
 public class Card implements Serializable {
     private static final long serialVersionUID = -8231436994772856118L;
 
@@ -24,25 +22,7 @@ public class Card implements Serializable {
 
     // toString
     public String toString() {
-	return getRankString(true);
-    }
-
-    // getRank
-    public int getRank() {
-	int r = rank;
-
-	if (rank >= 10 && rank < 14) {
-	    r = 10;
-	} else if (rank == 14) {
-	    r = 11;
-	}
-
-	return r;
-    }
-
-    // getRankChar
-    public String getRankString(boolean printSuit) {
-	StrBuilder sb = new StrBuilder();
+	StringBuilder sb = new StringBuilder();
 
 	switch (rank) {
 	case 10:
@@ -65,8 +45,38 @@ public class Card implements Serializable {
 	    break;
 	}
 
-	if (printSuit) {
-	    sb.append(suit);
+	sb.append(suit);
+
+	return sb.toString();
+    }
+
+    // getRank
+    public int getRank() {
+	int r = rank;
+
+	if (rank >= 10 && rank < 14) {
+	    r = 10;
+	} else if (rank == 14) {
+	    r = 11;
+	}
+
+	return r;
+    }
+
+    // getRankChar
+    public String getRankString() {
+	StringBuilder sb = new StringBuilder();
+
+	switch (rank) {
+	case 10:
+	    sb.append(TEN);
+	    break;
+	case 11:
+	    sb.append(ACE);
+	    break;
+	default:
+	    sb.append(rank);
+	    break;
 	}
 
 	return sb.toString();

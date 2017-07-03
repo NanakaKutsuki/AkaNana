@@ -1,6 +1,5 @@
 package org.kutsuki.akanana.shoe;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,9 +8,7 @@ import java.util.Random;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomAdaptor;
 
-public abstract class AbstractShoe implements Serializable {
-    private static final long serialVersionUID = -3717685521363497162L;
-
+public abstract class AbstractShoe {
     private int count;
     private int decks;
     private int hiddenPoint;

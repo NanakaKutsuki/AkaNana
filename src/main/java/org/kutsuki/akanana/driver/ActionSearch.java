@@ -3,6 +3,7 @@ package org.kutsuki.akanana.driver;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.action.StrategyUtil;
@@ -11,25 +12,23 @@ import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public class ActionSearch extends AbstractAkaNana {
-    private static final long serialVersionUID = -3560877650617538811L;
-
+public class ActionSearch extends AbstractAkaNana implements Callable<ActionModel> {
     private AbstractShoe shoe;
     private ActionModel model;
     private Hand dealerHand;
-    private int maxHands;
     private List<Hand> playerHands;
     private List<List<Hand>> otherPlayers;
     private StrategyUtil strategyUtil;
 
-    // default constructor
-    public ActionSearch() {
-	// do nothing
-    }
+    private Integer count;
+    private int card1;
+    private int card2;
+    private int showing;
+    private boolean cardSpecific;
 
     // constructor
-    public ActionSearch(StrategyUtil strategyUtil) {
-	this.strategyUtil = strategyUtil;
+    public ActionSearch(int card1, int card2, int showing, boolean cardSpecific, Integer count) {
+	setSettings(card1, card2, showing, cardSpecific, count, null, null);
     }
 
     @Override
@@ -37,18 +36,18 @@ public class ActionSearch extends AbstractAkaNana {
 	return strategyUtil;
     }
 
-    // run
-    public ActionModel run(int decks, int playable, int maxHands, int card1, int card2, int showing,
-	    boolean cardSpecific, Integer count) {
-	initPlayers(maxHands);
+    // call
+    @Override
+    public ActionModel call() {
+	initPlayers();
 	this.model = new ActionModel();
 
 	if (shoe == null) {
-	    this.shoe = new AkaNanaShoe(decks, playable);
+	    this.shoe = new AkaNanaShoe(ActionSettings.DECKS, ActionSettings.PLAYABLE);
 	}
 
 	if (strategyUtil == null) {
-	    this.strategyUtil = new StrategyUtil(true, decks);
+	    this.strategyUtil = new StrategyUtil(true, ActionSettings.DECKS);
 	}
 
 	// isPair
@@ -92,7 +91,7 @@ public class ActionSearch extends AbstractAkaNana {
 	setBankroll(BigDecimal.ZERO);
 	setupBet(-100);
 	rollbackShoe(playerHands, dealerHand, shoe);
-	playerAction(playerHands, dealerHand, shoe, maxHands, action);
+	playerAction(playerHands, dealerHand, shoe, ActionSettings.MAX_HANDS, action);
 	dealerAction(playerHands, otherPlayers, dealerHand, shoe);
 	payout(playerHands, dealerHand);
 
@@ -155,7 +154,7 @@ public class ActionSearch extends AbstractAkaNana {
 	    setStartingBet(BigDecimal.ZERO);
 	    setBankroll(BigDecimal.ZERO);
 	    setupBet(-100);
-	    playerAction(playerHands, dealerHand, shoe, maxHands);
+	    playerAction(playerHands, dealerHand, shoe, ActionSettings.MAX_HANDS);
 	    dealerAction(playerHands, otherPlayers, dealerHand, shoe);
 	}
     }
@@ -198,14 +197,13 @@ public class ActionSearch extends AbstractAkaNana {
     }
 
     // initPlayers
-    public void initPlayers(int maxHands) {
-	this.maxHands = maxHands;
+    public void initPlayers() {
 	this.dealerHand = new Hand();
 	this.otherPlayers = new ArrayList<List<Hand>>();
 	this.playerHands = new ArrayList<Hand>();
 
 	this.playerHands = new ArrayList<Hand>();
-	for (int i = 0; i < maxHands; i++) {
+	for (int i = 0; i < ActionSettings.MAX_HANDS; i++) {
 	    playerHands.add(new Hand());
 	}
     }
@@ -223,7 +221,14 @@ public class ActionSearch extends AbstractAkaNana {
 	return dealerHand;
     }
 
-    public void setShoe(AbstractShoe shoe) {
+    public void setSettings(int card1, int card2, int showing, boolean cardSpecific, Integer count, AbstractShoe shoe,
+	    StrategyUtil strategyUtil) {
+	this.card1 = card1;
+	this.card2 = card2;
+	this.showing = showing;
+	this.cardSpecific = cardSpecific;
+	this.count = count;
 	this.shoe = shoe;
+	this.strategyUtil = strategyUtil;
     }
 }

@@ -1,12 +1,8 @@
 package org.kutsuki.akanana.action;
 
-import java.io.Serializable;
-
 import org.kutsuki.akanana.shoe.Hand;
 
-public abstract class AbstractStrategyUtil implements Serializable {
-    private static final long serialVersionUID = -6531782837756121281L;
-
+public abstract class AbstractStrategyUtil {
     private boolean maxHands;
     private boolean surrenderAllowed;
     private Hand hand;

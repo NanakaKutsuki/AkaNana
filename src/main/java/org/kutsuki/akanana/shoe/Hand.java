@@ -1,14 +1,9 @@
 package org.kutsuki.akanana.shoe;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.text.StrBuilder;
-
-public class Hand implements Serializable {
-    private static final long serialVersionUID = 4146777317901920757L;
-
+public class Hand {
     private List<Card> hand;
     private boolean bust, doubleDown, insurance, split, surrender;
     private int soft, value;
@@ -163,7 +158,7 @@ public class Hand implements Serializable {
 
     // toString
     public String toString() {
-	StrBuilder sb = new StrBuilder();
+	StringBuilder sb = new StringBuilder();
 	boolean first = true;
 
 	for (Card c : hand) {

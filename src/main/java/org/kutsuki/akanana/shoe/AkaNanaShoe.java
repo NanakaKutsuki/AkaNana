@@ -1,8 +1,6 @@
 package org.kutsuki.akanana.shoe;
 
 public class AkaNanaShoe extends AbstractShoe {
-    private static final long serialVersionUID = 6826306879442040191L;
-
     // Constructor
     public AkaNanaShoe(int decks, int playable) {
 	super(decks, playable);

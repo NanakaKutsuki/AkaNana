@@ -1,6 +1,5 @@
 package org.kutsuki.akanana.driver;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,9 +9,7 @@ import org.kutsuki.akanana.shoe.AbstractShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public abstract class AbstractAkaNana implements Serializable {
-    private static final long serialVersionUID = -8818392306440415262L;
-
+public abstract class AbstractAkaNana {
     private static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5");
     private static final BigDecimal TWO = new BigDecimal(2);
 

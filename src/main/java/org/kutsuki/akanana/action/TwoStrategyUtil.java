@@ -2,8 +2,6 @@ package org.kutsuki.akanana.action;
 
 // TODO uncomment count specific actions
 public class TwoStrategyUtil extends AbstractStrategyUtil {
-    private static final long serialVersionUID = -2052149142484954816L;
-
     // private constructor
     private TwoStrategyUtil(boolean surrenderAllowed) {
 	super(surrenderAllowed);

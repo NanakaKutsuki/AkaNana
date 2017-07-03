@@ -1,98 +1,106 @@
 package org.kutsuki.akanana.driver;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Timer;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import org.apache.commons.lang3.text.StrBuilder;
-import org.apache.log4j.Logger;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
 public class ActionDriver {
-    private static final Logger LOGGER = Logger.getLogger(ActionDriver.class);
+    private static final long PERIOD = 10 * 1000;
 
-    private static final int DECKS = 2;
-    private static final int MAX_HANDS = 4;
-    private static final int PLAYABLE = 80;
-    private static final int TRIALS = 1000000;
-    private static final int NUM_SLICES = Runtime.getRuntime().availableProcessors();
-
-    private static final int CARD1 = 5;
-    private static final int CARD2 = 10;
-    private static final int SHOWING = 9;
-    private static final boolean CARD_SPECIFIC = false;
-    private static final Integer COUNT = 1;
-
-    private JavaSparkContext sc;
-    private long start;
+    private ExecutorService es;
+    private int cores;
+    private long runtime;
+    private String title;
 
     public ActionDriver() {
-	SparkConf sparkConf = new SparkConf().setAppName(getClass().getSimpleName()).setMaster("local");
-	this.sc = new JavaSparkContext(sparkConf);
-	this.start = System.currentTimeMillis();
+	this.cores = Runtime.getRuntime().availableProcessors();
+	this.es = Executors.newFixedThreadPool(cores);
     }
 
-    public void run() {
+    public void run(int card1, int card2, int showing, boolean cardSpecific, Integer count) {
+	setTitle(card1, card2, showing, cardSpecific, count);
+	System.out.println("Running: " + title + " with: " + cores + " cores!");
+
 	// generate input
-	List<ActionSearch> list = new ArrayList<>();
-	for (int i = 0; i < TRIALS; i++) {
-	    list.add(new ActionSearch());
+	List<Future<ActionModel>> futureList = new ArrayList<>();
+	for (int i = 0; i < ActionSettings.TRIALS.intValue(); i++) {
+	    Future<ActionModel> f = es.submit(new ActionSearch(card1, card2, showing, cardSpecific, count));
+	    futureList.add(f);
 	}
 
-	// parallelize
-	JavaRDD<ActionSearch> inputRDD = sc.parallelize(list, NUM_SLICES);
+	// shutdown executor
+	es.shutdown();
+
+	long start = System.currentTimeMillis();
+	Timer timer = new Timer(true);
+	timer.scheduleAtFixedRate(new ActionTimerTask(futureList, start), PERIOD, PERIOD);
 
 	// map
-	JavaRDD<ActionModel> mapRDD = inputRDD
-		.map(s -> s.run(DECKS, PLAYABLE, MAX_HANDS, CARD1, CARD2, SHOWING, CARD_SPECIFIC, COUNT));
+	ActionModel result = new ActionModel();
+	for (int i = 0; i < futureList.size(); i++) {
+	    try {
+		// collect result
+		ActionModel model = futureList.get(i).get();
 
-	// reduce
-	ActionModel model = mapRDD.reduce((a, b) -> {
-	    if (b.isSplitAllowed()) {
-		a.setSplitAllowed(b.isSplitAllowed());
-		a.setSplit(a.getSplit().add(b.getSplit()));
+		// reduce result
+		if (model.isSplitAllowed()) {
+		    result.setSplitAllowed(model.isSplitAllowed());
+		    result.setSplit(result.getSplit().add(model.getSplit()));
+		}
+
+		result.setDoubleDown(result.getDoubleDown().add(model.getDoubleDown()));
+		result.setHit(result.getHit().add(model.getHit()));
+		result.setStand(result.getStand().add(model.getStand()));
+		result.setSurrender(result.getSurrender().add(model.getSurrender()));
+	    } catch (InterruptedException e) {
+		e.printStackTrace();
+	    } catch (ExecutionException e) {
+		e.printStackTrace();
 	    }
+	}
 
-	    a.setDoubleDown(a.getDoubleDown().add(b.getDoubleDown()));
-	    a.setHit(a.getHit().add(b.getHit()));
-	    a.setStand(a.getStand().add(b.getStand()));
-	    a.setSurrender(a.getSurrender().add(b.getSurrender()));
+	runtime = System.currentTimeMillis() - start;
+	timer.cancel();
 
-	    return a;
-	});
-
-	output(model);
-
-	sc.stop();
+	// output
+	output(result);
     }
 
-    private void output(ActionModel model) {
-	StrBuilder sb = new StrBuilder();
-	Card card1 = new Card(CARD1, 'x');
-	Card card2 = new Card(CARD2, 'x');
+    private void setTitle(int card1, int card2, int showing, boolean cardSpecific, Integer count) {
+	StringBuilder sb = new StringBuilder();
 
-	if (CARD_SPECIFIC) {
-	    sb.append(card1.getRankString(false));
-	    sb.append(card2.getRankString(false));
+	Card c1 = new Card(card1, 'x');
+	Card c2 = new Card(card2, 'x');
+
+	if (cardSpecific) {
+	    sb.append(c1.getRankString());
+	    sb.append(c2.getRankString());
 	} else {
 	    Hand hand = new Hand();
-	    hand.addCard(card1);
-	    hand.addCard(card2);
+	    hand.addCard(c1);
+	    hand.addCard(c2);
 	    sb.append(hand.getValue());
 	}
 	sb.append('v');
 
-	switch (SHOWING) {
+	switch (showing) {
 	case 10:
 	    sb.append('T');
 	    break;
@@ -100,43 +108,86 @@ public class ActionDriver {
 	    sb.append('A');
 	    break;
 	default:
-	    sb.append(SHOWING);
+	    sb.append(showing);
 	    break;
 	}
 
-	if (COUNT != null) {
+	if (count != null) {
 	    sb.append("@");
-	    sb.append(COUNT);
+	    sb.append(count);
 	}
 
-	LOGGER.info(sb.toString());
+	this.title = sb.toString();
+    }
 
-	Map<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
-	treeMap.put(model.getDoubleDown(), Action.DOUBLE_DOWN);
-	treeMap.put(model.getHit(), Action.HIT);
-	treeMap.put(model.getStand(), Action.STAND);
-	treeMap.put(model.getSurrender(), Action.SURRENDER);
+    private void output(ActionModel model) {
+	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(title + ".txt")));) {
+	    bw.write("Search: " + title);
+	    bw.newLine();
 
-	if (model.isSplitAllowed()) {
-	    treeMap.put(model.getSplit(), Action.SPLIT);
+	    Map<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
+	    treeMap.put(model.getDoubleDown(), Action.DOUBLE_DOWN);
+	    treeMap.put(model.getHit(), Action.HIT);
+	    treeMap.put(model.getStand(), Action.STAND);
+	    treeMap.put(model.getSurrender(), Action.SURRENDER);
+
+	    if (model.isSplitAllowed()) {
+		treeMap.put(model.getSplit(), Action.SPLIT);
+	    }
+
+	    for (Entry<BigDecimal, Action> entry : treeMap.entrySet()) {
+		bw.write(entry.getValue().toString() + ": " + entry.getKey());
+		bw.newLine();
+	    }
+
+	    String footer = "Runtime: " + ActionSettings.formatTime(runtime) + ", Cores: " + cores;
+	    System.out.println(footer);
+	    bw.write(footer);
+	    bw.newLine();
+	} catch (IOException e) {
+	    e.printStackTrace();
 	}
-
-	DecimalFormat df = new DecimalFormat("$#,##0.00;-$#,##0.00");
-	for (Entry<BigDecimal, Action> entry : treeMap.entrySet()) {
-	    String s = entry.getValue().toString() + ": " + df.format(entry.getKey());
-	    LOGGER.info(s);
-	}
-
-	long ms = System.currentTimeMillis() - start;
-	int seconds = (int) (ms / 1000) % 60;
-	int minutes = (int) ((ms / (1000 * 60)) % 60);
-	int hours = (int) ((ms / (1000 * 60 * 60)) % 24);
-	String runtime = "Runtime: " + hours + "h " + minutes + "m " + seconds + "s";
-	LOGGER.info(runtime);
     }
 
     public static void main(String[] args) {
+	if (args.length != 4 && args.length != 5) {
+	    throw new IllegalArgumentException("card1, card2, showing, cardSpecific, count");
+	}
+
+	int card1 = 0;
+	int card2 = 0;
+	int showing = 0;
+	boolean cardSpecific = Boolean.parseBoolean(args[3]);
+	Integer count = null;
+
+	try {
+	    card1 = Integer.parseInt(args[0]);
+	    if (card1 == 14) {
+		card1 = 11;
+	    }
+
+	    card2 = Integer.parseInt(args[1]);
+	    if (card2 == 14) {
+		card2 = 11;
+	    }
+
+	    showing = Integer.parseInt(args[2]);
+	    if (showing == 14) {
+		showing = 11;
+	    }
+	} catch (NumberFormatException e) {
+	    throw new IllegalArgumentException("Not an Integer!", e);
+	}
+
+	if (args.length == 5) {
+	    try {
+		count = Integer.parseInt(args[4]);
+	    } catch (NumberFormatException e) {
+		count = null;
+	    }
+	}
+
 	ActionDriver driver = new ActionDriver();
-	driver.run();
+	driver.run(card1, card2, showing, cardSpecific, count);
     }
 }
