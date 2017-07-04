@@ -22,14 +22,28 @@ public class Hand {
 
     // copy constructor
     public Hand(Hand hand) {
-	this.bust = hand.isBust();
-	this.doubleDown = hand.isDoubleDown();
-	this.hand = new ArrayList<Card>(hand.getHand());
-	this.insurance = hand.isInsurance();
-	this.soft = hand.getSoft();
-	this.split = hand.isSplit();
-	this.surrender = hand.isSurrender();
-	this.value = hand.getValue();
+	this.doubleDown = false;
+	this.hand = new ArrayList<Card>();
+	this.insurance = false;
+	this.split = false;
+	this.surrender = false;
+
+	for (Card card : hand.getHand()) {
+	    addCard(card);
+	}
+    }
+
+    // copy constructor
+    public Hand(Hand hand, int numCards) {
+	this.doubleDown = false;
+	this.hand = new ArrayList<Card>();
+	this.insurance = false;
+	this.split = false;
+	this.surrender = false;
+
+	for (int i = 0; i < numCards; i++) {
+	    addCard(hand.getHand().get(i));
+	}
     }
 
     // addCard

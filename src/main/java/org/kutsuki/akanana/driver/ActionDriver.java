@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.kutsuki.akanana.action.Action;
+import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
@@ -36,12 +37,11 @@ public class ActionDriver {
 
     public void run(int card1, int card2, int showing, Integer count) {
 	setTitle(card1, card2, showing, count);
-	// System.out.println("Running: " + title + " with: " + cores + "
-	// cores!");
+	System.out.println("Running: " + title + " with: " + cores + " cores!");
 
 	// generate input
 	List<Future<ActionModel>> futureList = new ArrayList<>();
-	for (int i = 0; i < ActionSettings.TRIALS.intValue(); i++) {
+	for (int i = 0; i < AkaNanaSettings.TRIALS.intValue(); i++) {
 	    Future<ActionModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
 	    futureList.add(f);
 	}
@@ -51,8 +51,7 @@ public class ActionDriver {
 
 	long start = System.currentTimeMillis();
 	Timer timer = new Timer(true);
-	// timer.scheduleAtFixedRate(new ActionTimerTask(futureList, start),
-	// PERIOD, PERIOD);
+	timer.scheduleAtFixedRate(new ActionTimerTask(futureList, start), PERIOD, PERIOD);
 
 	// map
 	ActionModel result = new ActionModel();
@@ -145,8 +144,8 @@ public class ActionDriver {
 		bw.newLine();
 	    }
 
-	    String footer = "Runtime: " + ActionSettings.formatTime(runtime) + ", Cores: " + cores;
-	    // System.out.println(footer);
+	    String footer = "Runtime: " + AkaNanaSettings.formatTime(runtime) + ", Cores: " + cores;
+	    System.out.println(footer);
 	    bw.write(footer);
 	    bw.newLine();
 	} catch (IOException e) {

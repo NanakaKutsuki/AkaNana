@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.action.StrategyUtil;
+import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.shoe.AbstractShoe;
 import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
@@ -42,11 +43,11 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	this.model = new ActionModel();
 
 	if (shoe == null) {
-	    this.shoe = new AkaNanaShoe(ActionSettings.DECKS, ActionSettings.PLAYABLE);
+	    this.shoe = new AkaNanaShoe(AkaNanaSettings.DECKS, AkaNanaSettings.PLAYABLE);
 	}
 
 	if (strategyUtil == null) {
-	    this.strategyUtil = new StrategyUtil(true, ActionSettings.DECKS);
+	    this.strategyUtil = new StrategyUtil(true, AkaNanaSettings.DECKS);
 	}
 
 	// isPair
@@ -109,7 +110,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	setBankroll(BigDecimal.ZERO);
 	setupBet(-100);
 	rollbackShoe(playerHands, dealerHand, shoe);
-	playerAction(playerHands, dealerHand, shoe, ActionSettings.MAX_HANDS, action);
+	playerAction(playerHands, dealerHand, shoe, AkaNanaSettings.MAX_HANDS, action);
 	dealerAction(playerHands, otherPlayers, dealerHand, shoe);
 	payout(playerHands, dealerHand);
 
@@ -172,7 +173,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	    setStartingBet(BigDecimal.ZERO);
 	    setBankroll(BigDecimal.ZERO);
 	    setupBet(-100);
-	    playerAction(playerHands, dealerHand, shoe, ActionSettings.MAX_HANDS);
+	    playerAction(playerHands, dealerHand, shoe, AkaNanaSettings.MAX_HANDS);
 	    dealerAction(playerHands, otherPlayers, dealerHand, shoe);
 	}
     }
@@ -206,7 +207,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	this.playerHands = new ArrayList<Hand>();
 
 	this.playerHands = new ArrayList<Hand>();
-	for (int i = 0; i < ActionSettings.MAX_HANDS; i++) {
+	for (int i = 0; i < AkaNanaSettings.MAX_HANDS; i++) {
 	    playerHands.add(new Hand());
 	}
     }

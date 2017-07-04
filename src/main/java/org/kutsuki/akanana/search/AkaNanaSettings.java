@@ -1,11 +1,14 @@
-package org.kutsuki.akanana.driver;
+package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public final class ActionSettings {
+public final class AkaNanaSettings {
+    public static final boolean HIT_SOFT_17 = false;
+    public static final boolean SURRENDER = false;
     public static final int DECKS = 2;
     public static final int MAX_HANDS = 4;
+
     public static final int PLAYABLE = 80;
     public static final BigDecimal TRIALS = new BigDecimal(1000000);
 
@@ -13,7 +16,7 @@ public final class ActionSettings {
     public static final BigDecimal THOUSAND = new BigDecimal(1000);
     public static final BigDecimal TWENTY_FOUR = new BigDecimal(24);
 
-    private ActionSettings() {
+    private AkaNanaSettings() {
 	// private constructor
     }
 

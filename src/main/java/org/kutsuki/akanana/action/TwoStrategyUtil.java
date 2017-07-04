@@ -196,6 +196,7 @@ public class TwoStrategyUtil extends AbstractStrategyUtil {
 	    // } else if ((getValue() == 13 || getValue() == 14 || getValue() ==
 	    // 15 || getValue() ==
 	    // 16) && getShowing() <= 6) {
+
 	    if ((getValue() == 13 || getValue() == 14 || getValue() == 15 || getValue() == 16) && getShowing() <= 6) {
 		action = Action.STAND;
 	    } else if ((getValue() == 13 || getValue() == 14 || getValue() == 15 || getValue() == 16)

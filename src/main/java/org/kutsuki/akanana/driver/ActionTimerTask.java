@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.Future;
 
+import org.kutsuki.akanana.search.AkaNanaSettings;
+
 public class ActionTimerTask extends TimerTask {
     private List<Future<ActionModel>> futureList;
     private long start;
@@ -31,15 +33,15 @@ public class ActionTimerTask extends TimerTask {
     private void printStatus(int completed) {
 	BigDecimal timeDelta = BigDecimal.valueOf(System.currentTimeMillis() - start);
 	BigDecimal avgSpeed = BigDecimal.valueOf(completed).divide(timeDelta, 4, RoundingMode.HALF_UP);
-	BigDecimal rate = avgSpeed.multiply(ActionSettings.THOUSAND).setScale(0, RoundingMode.HALF_UP);
+	BigDecimal rate = avgSpeed.multiply(AkaNanaSettings.THOUSAND).setScale(0, RoundingMode.HALF_UP);
 
 	if (avgSpeed.compareTo(BigDecimal.ZERO) == 1) {
-	    BigDecimal timeLeft = ActionSettings.TRIALS.divide(avgSpeed, 2, RoundingMode.HALF_UP).subtract(timeDelta);
+	    BigDecimal timeLeft = AkaNanaSettings.TRIALS.divide(avgSpeed, 2, RoundingMode.HALF_UP).subtract(timeDelta);
 
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("Completed: ").append(completed);
 	    sb.append(", Rate: ").append(rate).append("a/s");
-	    sb.append(", Time Left: ").append(ActionSettings.formatTime(timeLeft.longValue()));
+	    sb.append(", Time Left: ").append(AkaNanaSettings.formatTime(timeLeft.longValue()));
 	    System.out.println(sb.toString());
 	} else {
 	    System.out.println("Completed: " + completed + ", Rate: ?, Time Left: ?");
