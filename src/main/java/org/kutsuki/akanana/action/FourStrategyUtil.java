@@ -1,8 +1,6 @@
 package org.kutsuki.akanana.action;
 
 public class FourStrategyUtil extends AbstractStrategyUtil {
-    private static final long serialVersionUID = -2052149142484954816L;
-
     // private constructor
     private FourStrategyUtil(boolean surrenderAllowed) {
 	super(surrenderAllowed);

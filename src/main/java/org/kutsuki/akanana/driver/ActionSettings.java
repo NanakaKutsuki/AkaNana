@@ -34,7 +34,10 @@ public final class ActionSettings {
 	    sb.append(minutes).append('m').append(' ');
 	}
 
-	sb.append(seconds).append('s');
+	if (hours.compareTo(BigDecimal.ZERO) <= 0) {
+	    sb.append(seconds).append('s');
+	}
+
 	return sb.toString();
     }
 }

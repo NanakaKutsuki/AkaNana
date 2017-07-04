@@ -20,6 +20,18 @@ public class Hand {
 	this.value = 0;
     }
 
+    // copy constructor
+    public Hand(Hand hand) {
+	this.bust = hand.isBust();
+	this.doubleDown = hand.isDoubleDown();
+	this.hand = new ArrayList<Card>(hand.getHand());
+	this.insurance = hand.isInsurance();
+	this.soft = hand.getSoft();
+	this.split = hand.isSplit();
+	this.surrender = hand.isSurrender();
+	this.value = hand.getValue();
+    }
+
     // addCard
     public void addCard(Card card) {
 	hand.add(card);

@@ -1,12 +1,8 @@
 package org.kutsuki.akanana.action;
 
-import java.io.Serializable;
-
 import org.kutsuki.akanana.shoe.Hand;
 
-public class StrategyUtil implements Serializable {
-    private static final long serialVersionUID = -7034599234666600201L;
-
+public class StrategyUtil {
     private AbstractStrategyUtil strategyUtil;
 
     public StrategyUtil(boolean surrenderAllowed, int decks) {

@@ -34,14 +34,15 @@ public class ActionDriver {
 	this.es = Executors.newFixedThreadPool(cores);
     }
 
-    public void run(int card1, int card2, int showing, boolean cardSpecific, Integer count) {
-	setTitle(card1, card2, showing, cardSpecific, count);
-	System.out.println("Running: " + title + " with: " + cores + " cores!");
+    public void run(int card1, int card2, int showing, Integer count) {
+	setTitle(card1, card2, showing, count);
+	// System.out.println("Running: " + title + " with: " + cores + "
+	// cores!");
 
 	// generate input
 	List<Future<ActionModel>> futureList = new ArrayList<>();
 	for (int i = 0; i < ActionSettings.TRIALS.intValue(); i++) {
-	    Future<ActionModel> f = es.submit(new ActionSearch(card1, card2, showing, cardSpecific, count));
+	    Future<ActionModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
 	    futureList.add(f);
 	}
 
@@ -50,7 +51,8 @@ public class ActionDriver {
 
 	long start = System.currentTimeMillis();
 	Timer timer = new Timer(true);
-	timer.scheduleAtFixedRate(new ActionTimerTask(futureList, start), PERIOD, PERIOD);
+	// timer.scheduleAtFixedRate(new ActionTimerTask(futureList, start),
+	// PERIOD, PERIOD);
 
 	// map
 	ActionModel result = new ActionModel();
@@ -83,13 +85,13 @@ public class ActionDriver {
 	output(result);
     }
 
-    private void setTitle(int card1, int card2, int showing, boolean cardSpecific, Integer count) {
+    private void setTitle(int card1, int card2, int showing, Integer count) {
 	StringBuilder sb = new StringBuilder();
 
 	Card c1 = new Card(card1, 'x');
 	Card c2 = new Card(card2, 'x');
 
-	if (cardSpecific) {
+	if (card1 == card2 || card1 == 11 || card2 == 11) {
 	    sb.append(c1.getRankString());
 	    sb.append(c2.getRankString());
 	} else {
@@ -113,7 +115,7 @@ public class ActionDriver {
 	}
 
 	if (count != null) {
-	    sb.append("@");
+	    sb.append("at");
 	    sb.append(count);
 	}
 
@@ -122,6 +124,7 @@ public class ActionDriver {
 
     private void output(ActionModel model) {
 	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(title + ".txt")));) {
+	    System.out.println("\nSearch: " + title);
 	    bw.write("Search: " + title);
 	    bw.newLine();
 
@@ -136,12 +139,14 @@ public class ActionDriver {
 	    }
 
 	    for (Entry<BigDecimal, Action> entry : treeMap.entrySet()) {
+		System.out.println(entry.getValue().toString() + ": " + entry.getKey());
+
 		bw.write(entry.getValue().toString() + ": " + entry.getKey());
 		bw.newLine();
 	    }
 
 	    String footer = "Runtime: " + ActionSettings.formatTime(runtime) + ", Cores: " + cores;
-	    System.out.println(footer);
+	    // System.out.println(footer);
 	    bw.write(footer);
 	    bw.newLine();
 	} catch (IOException e) {
@@ -150,14 +155,14 @@ public class ActionDriver {
     }
 
     public static void main(String[] args) {
-	if (args.length != 4 && args.length != 5) {
-	    throw new IllegalArgumentException("card1, card2, showing, cardSpecific, count");
+	if (args.length != 3 && args.length != 4) {
+	    throw new IllegalArgumentException("card1, card2, showing, count");
 	}
 
 	int card1 = 0;
 	int card2 = 0;
-	int showing = 0;
-	boolean cardSpecific = Boolean.parseBoolean(args[3]);
+	int showingStart = 2;
+	int showingEnd = 11;
 	Integer count = null;
 
 	try {
@@ -171,23 +176,29 @@ public class ActionDriver {
 		card2 = 11;
 	    }
 
-	    showing = Integer.parseInt(args[2]);
-	    if (showing == 14) {
-		showing = 11;
+	    if (!args[2].equalsIgnoreCase("all")) {
+		showingStart = Integer.parseInt(args[2]);
+		if (showingStart == 14) {
+		    showingStart = 11;
+		}
+
+		showingEnd = showingStart;
 	    }
 	} catch (NumberFormatException e) {
 	    throw new IllegalArgumentException("Not an Integer!", e);
 	}
 
-	if (args.length == 5) {
+	if (args.length == 4) {
 	    try {
-		count = Integer.parseInt(args[4]);
+		count = Integer.parseInt(args[3]);
 	    } catch (NumberFormatException e) {
 		count = null;
 	    }
 	}
 
-	ActionDriver driver = new ActionDriver();
-	driver.run(card1, card2, showing, cardSpecific, count);
+	for (int showing = showingEnd; showing >= showingStart; showing--) {
+	    ActionDriver driver = new ActionDriver();
+	    driver.run(card1, card2, showing, count);
+	}
     }
 }

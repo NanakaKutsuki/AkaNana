@@ -24,11 +24,10 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
     private int card1;
     private int card2;
     private int showing;
-    private boolean cardSpecific;
 
     // constructor
-    public ActionSearch(int card1, int card2, int showing, boolean cardSpecific, Integer count) {
-	setSettings(card1, card2, showing, cardSpecific, count, null, null);
+    public ActionSearch(int card1, int card2, int showing, Integer count) {
+	setSettings(card1, card2, showing, count, null, null);
     }
 
     @Override
@@ -57,7 +56,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 
 	// findValue
 	int findValue = 0;
-	if (!cardSpecific) {
+	if (!isCardSpecific(card1, card2)) {
 	    Hand hand = new Hand();
 	    if (card1 == 11) {
 		hand.addCard(new Card(14, 'x'));
@@ -74,7 +73,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	}
 
 	// play until cards are found
-	searchShoe(card1, card2, findValue, cardSpecific, showing, count);
+	searchShoe(card1, card2, findValue, showing, count);
 
 	// play with actions
 	for (Action action : Action.values()) {
@@ -84,6 +83,25 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	}
 
 	return model;
+    }
+
+    // isPlayerHandFound
+    private boolean isPlayerHandFound(int card1, int card2, int findValue) {
+	boolean found = false;
+	Hand playerHand = playerHands.get(0);
+
+	if (isCardSpecific(card1, card2)) {
+	    found = (playerHand.getFirstCardRank() == card1 && playerHand.getSecondCardRank() == card2)
+		    || (playerHand.getFirstCardRank() == card2 && playerHand.getSecondCardRank() == card1);
+	} else {
+	    found = playerHand.getValue() == findValue && playerHand.getSoft() == 0;
+	}
+
+	return found;
+    }
+
+    private boolean isCardSpecific(int card1, int card2) {
+	return card1 == card2 || card1 == 11 || card2 == 11;
     }
 
     private void runAction(Action action) {
@@ -117,7 +135,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
     }
 
     // searchShoe
-    public void searchShoe(int card1, int card2, int findValue, boolean cardSpecific, int showing, Integer count) {
+    public void searchShoe(int card1, int card2, int findValue, int showing, Integer count) {
 	// clear table
 	for (Hand playerHand : playerHands) {
 	    playerHand.clear();
@@ -146,7 +164,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	    dealerHand.addCard(shoe.getNextCard());
 
 	    // check if cards found
-	    playerOk = isPlayerHandFound(card1, card2, findValue, cardSpecific);
+	    playerOk = isPlayerHandFound(card1, card2, findValue);
 	    dealerOk = dealerHand.getSecondCardRank() == showing && !dealerHand.isBlackjack();
 	    countOk = count == null ? true : shoe.getCount() == count;
 
@@ -157,21 +175,6 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	    playerAction(playerHands, dealerHand, shoe, ActionSettings.MAX_HANDS);
 	    dealerAction(playerHands, otherPlayers, dealerHand, shoe);
 	}
-    }
-
-    // isPlayerHandFound
-    private boolean isPlayerHandFound(int card1, int card2, int findValue, boolean cardSpecific) {
-	boolean found = false;
-	Hand playerHand = playerHands.get(0);
-
-	if (cardSpecific) {
-	    found = (playerHand.getFirstCardRank() == card1 && playerHand.getSecondCardRank() == card2)
-		    || (playerHand.getFirstCardRank() == card2 && playerHand.getSecondCardRank() == card1);
-	} else {
-	    found = playerHand.getValue() == findValue && playerHand.getSoft() == 0;
-	}
-
-	return found;
     }
 
     // rollbackShoe
@@ -221,12 +224,11 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	return dealerHand;
     }
 
-    public void setSettings(int card1, int card2, int showing, boolean cardSpecific, Integer count, AbstractShoe shoe,
+    public void setSettings(int card1, int card2, int showing, Integer count, AbstractShoe shoe,
 	    StrategyUtil strategyUtil) {
 	this.card1 = card1;
 	this.card2 = card2;
 	this.showing = showing;
-	this.cardSpecific = cardSpecific;
 	this.count = count;
 	this.shoe = shoe;
 	this.strategyUtil = strategyUtil;

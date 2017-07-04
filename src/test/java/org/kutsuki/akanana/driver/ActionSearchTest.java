@@ -25,8 +25,8 @@ public class ActionSearchTest {
 
     public ActionSearchTest() {
 	this.basic = new StrategyUtil(true, DECKS);
-	this.as = new ActionSearch(0, 0, 0, false, null);
-	this.s = new ActionSearch(0, 0, 0, false, null);
+	this.as = new ActionSearch(0, 0, 0, null);
+	this.s = new ActionSearch(0, 0, 0, null);
     }
 
     @Test
@@ -49,7 +49,9 @@ public class ActionSearchTest {
 	for (int card1 = 2; card1 <= 11; card1++) {
 	    for (int card2 = 2; card2 <= 11; card2++) {
 		for (int showing = 2; showing <= 11; showing++) {
-		    testFindShoeByCards(shoe, card1, card2, showing, null);
+		    if (card1 == card2 || card1 == 11 || card2 == 11) {
+			testFindShoeByCards(shoe, card1, card2, showing, null);
+		    }
 		}
 	    }
 	}
@@ -71,7 +73,7 @@ public class ActionSearchTest {
 	AkaNanaShoe shoe = new AkaNanaShoe(DECKS, PLAYABLE);
 	for (int card1 = 2; card1 <= 11; card1++) {
 	    for (int showing = 2; showing <= 11; showing++) {
-		testFindShoeByCards(shoe, card1, 10, showing, DECKS * -2);
+		testFindShoeByCards(shoe, card1, 11, showing, DECKS * -2);
 	    }
 	}
     }
@@ -87,7 +89,7 @@ public class ActionSearchTest {
 	for (int i = 0; i < 3; i++) {
 	    playerHands.add(new Hand());
 	}
-	as.setSettings(0, 0, 0, false, null, shoe, basic);
+	as.setSettings(0, 0, 0, null, shoe, basic);
 
 	// Forced Stand Player Win by dealer bust
 	as.setStartingBet(BET);
@@ -376,13 +378,13 @@ public class ActionSearchTest {
 
 	s.setStartingBet(BET);
 	s.initPlayers();
-	s.setSettings(0, 0, 0, false, null, shoe, basic);
+	s.setSettings(0, 0, 0, null, shoe, basic);
 
 	for (int value = 4; value <= 20; value++) {
 	    for (int showing = 2; showing <= 11; showing++) {
 		s.setBankroll(BigDecimal.ZERO);
 		s.setupBet(-100);
-		s.searchShoe(0, 0, value, false, showing, null);
+		s.searchShoe(0, 0, value, showing, null);
 		s.rollbackShoe(playerHands, dealerHand, shoe);
 		s.playerAction(playerHands, dealerHand, shoe, 3, Action.STAND);
 		s.dealerAction(playerHands, otherPlayers, dealerHand, shoe);
@@ -428,7 +430,7 @@ public class ActionSearchTest {
 	}
 
 	if (!hand.isBlackjack()) {
-	    as.setSettings(card1, card2, showing, false, count, shoe, basic);
+	    as.setSettings(card1, card2, showing, count, shoe, basic);
 	    as.call();
 
 	    assertEquals("Wrong player value", hand.getValue(), as.getPlayerHands().get(0).getValue());
@@ -443,7 +445,7 @@ public class ActionSearchTest {
 
     // testFindShoeByCards
     private void testFindShoeByCards(AbstractShoe shoe, int card1, int card2, int showing, Integer count) {
-	as.setSettings(card1, card2, showing, true, count, shoe, basic);
+	as.setSettings(card1, card2, showing, count, shoe, basic);
 	as.call();
 
 	if (!((as.getPlayerHands().get(0).getFirstCardRank() == card1
