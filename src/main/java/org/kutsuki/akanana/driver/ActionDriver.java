@@ -24,14 +24,14 @@ import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
 public class ActionDriver {
-    private static final long PERIOD = 10 * 1000;
+    private static final long PERIOD = 60 * 1000;
 
     private ActionTimerTask timerTask;
     private ExecutorService es;
     private int cores;
 
     public ActionDriver() {
-	this.cores = Runtime.getRuntime().availableProcessors() - 1;
+	this.cores = Runtime.getRuntime().availableProcessors();
 	this.es = Executors.newFixedThreadPool(cores);
 	this.timerTask = new ActionTimerTask();
     }
@@ -89,7 +89,9 @@ public class ActionDriver {
 	confidence.finish(pair);
 
 	// output
-	output(result, pair, confidence.getConfidence(pair), System.currentTimeMillis() - start);
+	int confidenceResult = confidence.getConfidence(pair);
+	result.setConfidence(confidenceResult);
+	output(result, pair, confidenceResult, System.currentTimeMillis() - start);
 	return result;
     }
 
