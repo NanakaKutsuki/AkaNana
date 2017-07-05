@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,18 +26,35 @@ import org.kutsuki.akanana.shoe.Hand;
 public class ActionDriver {
     private static final long PERIOD = 10 * 1000;
 
+    private ActionTimerTask timerTask;
     private ExecutorService es;
     private int cores;
-    private long runtime;
-    private String title;
 
     public ActionDriver() {
-	this.cores = Runtime.getRuntime().availableProcessors();
+	this.cores = Runtime.getRuntime().availableProcessors() - 1;
 	this.es = Executors.newFixedThreadPool(cores);
+	this.timerTask = new ActionTimerTask();
     }
 
-    public void run(int card1, int card2, int showing, Integer count) {
-	setTitle(card1, card2, showing, count);
+    public void run(int card1, int card2, int showingStart, int showingEnd, Integer count) {
+	Timer timer = new Timer(true);
+	timer.scheduleAtFixedRate(timerTask, PERIOD, PERIOD);
+
+	List<ActionModel> resultList = new ArrayList<ActionModel>();
+	for (int showing = showingEnd; showing >= showingStart; showing--) {
+	    resultList.add(search(card1, card2, showing, count));
+	}
+
+	// shutdown executor
+	es.shutdown();
+	timer.cancel();
+
+	outputCsv(resultList, card1 == card2);
+    }
+
+    private ActionModel search(int card1, int card2, int showing, Integer count) {
+	boolean pair = card1 == card2;
+	String title = parseJobTitle(card1, card2, showing, count);
 	System.out.println("Running: " + title + " with: " + cores + " cores!");
 
 	// generate input
@@ -46,45 +64,36 @@ public class ActionDriver {
 	    futureList.add(f);
 	}
 
-	// shutdown executor
-	es.shutdown();
-
 	long start = System.currentTimeMillis();
-	Timer timer = new Timer(true);
-	timer.scheduleAtFixedRate(new ActionTimerTask(futureList, start), PERIOD, PERIOD);
+	timerTask.setFutureList(futureList, start);
 
 	// map
 	ActionModel result = new ActionModel();
+	result.setJobTitle(title);
+
+	ActionConfidence confidence = new ActionConfidence();
 	for (int i = 0; i < futureList.size(); i++) {
 	    try {
 		// collect result
 		ActionModel model = futureList.get(i).get();
+		confidence.add(model, i, pair);
 
 		// reduce result
-		if (model.isSplitAllowed()) {
-		    result.setSplitAllowed(model.isSplitAllowed());
-		    result.setSplit(result.getSplit().add(model.getSplit()));
-		}
-
-		result.setDoubleDown(result.getDoubleDown().add(model.getDoubleDown()));
-		result.setHit(result.getHit().add(model.getHit()));
-		result.setStand(result.getStand().add(model.getStand()));
-		result.setSurrender(result.getSurrender().add(model.getSurrender()));
+		result.merge(model, pair);
 	    } catch (InterruptedException e) {
 		e.printStackTrace();
 	    } catch (ExecutionException e) {
 		e.printStackTrace();
 	    }
 	}
-
-	runtime = System.currentTimeMillis() - start;
-	timer.cancel();
+	confidence.finish(pair);
 
 	// output
-	output(result);
+	output(result, pair, confidence.getConfidence(pair), System.currentTimeMillis() - start);
+	return result;
     }
 
-    private void setTitle(int card1, int card2, int showing, Integer count) {
+    private String parseJobTitle(int card1, int card2, int showing, Integer count) {
 	StringBuilder sb = new StringBuilder();
 
 	Card c1 = new Card(card1, 'x');
@@ -118,13 +127,14 @@ public class ActionDriver {
 	    sb.append(count);
 	}
 
-	this.title = sb.toString();
+	return sb.toString();
     }
 
-    private void output(ActionModel model) {
-	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(title + ".txt")));) {
-	    System.out.println("\nSearch: " + title);
-	    bw.write("Search: " + title);
+    private void output(ActionModel model, boolean pair, int confidence, long runtime) {
+	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(model.getJobTitle() + ".txt")));) {
+	    String search = "\nSearch: " + model.getJobTitle() + " Confidence: " + confidence + Character.toString('%');
+	    System.out.println(search);
+	    bw.write(search);
 	    bw.newLine();
 
 	    Map<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
@@ -133,14 +143,14 @@ public class ActionDriver {
 	    treeMap.put(model.getStand(), Action.STAND);
 	    treeMap.put(model.getSurrender(), Action.SURRENDER);
 
-	    if (model.isSplitAllowed()) {
+	    if (pair) {
 		treeMap.put(model.getSplit(), Action.SPLIT);
 	    }
 
 	    for (Entry<BigDecimal, Action> entry : treeMap.entrySet()) {
-		System.out.println(entry.getValue().toString() + ": " + entry.getKey());
-
-		bw.write(entry.getValue().toString() + ": " + entry.getKey());
+		String result = entry.getValue().toString() + ": " + entry.getKey().setScale(0, RoundingMode.HALF_UP);
+		System.out.println(result);
+		bw.write(result);
 		bw.newLine();
 	    }
 
@@ -148,6 +158,44 @@ public class ActionDriver {
 	    System.out.println(footer);
 	    bw.write(footer);
 	    bw.newLine();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+    }
+
+    private void outputCsv(List<ActionModel> resultList, boolean pair) {
+	try (BufferedWriter bw = new BufferedWriter(
+		new FileWriter(new File(resultList.get(0).getJobTitle() + ".csv")));) {
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("Case").append(',');
+	    sb.append("Stand").append(',');
+	    sb.append("Hit").append(',');
+	    sb.append("DoubleDown").append(',');
+	    sb.append("Surrender").append(',');
+	    sb.append("Split").append(',');
+	    sb.append("Confidence");
+	    System.out.println(sb.toString());
+	    bw.write(sb.toString());
+	    bw.newLine();
+
+	    for (ActionModel result : resultList) {
+		sb = new StringBuilder();
+		sb.append(result.getJobTitle()).append(',');
+		sb.append(result.getStand().setScale(0, RoundingMode.HALF_UP)).append(',');
+		sb.append(result.getHit().setScale(0, RoundingMode.HALF_UP)).append(',');
+		sb.append(result.getDoubleDown().setScale(0, RoundingMode.HALF_UP)).append(',');
+		sb.append(result.getSurrender().setScale(0, RoundingMode.HALF_UP)).append(',');
+
+		if (pair) {
+		    sb.append(result.getSplit().setScale(0, RoundingMode.HALF_UP));
+		}
+
+		sb.append(',').append(result.getConfidence());
+
+		System.out.println(sb.toString());
+		bw.write(sb.toString());
+		bw.newLine();
+	    }
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
@@ -195,9 +243,7 @@ public class ActionDriver {
 	    }
 	}
 
-	for (int showing = showingEnd; showing >= showingStart; showing--) {
-	    ActionDriver driver = new ActionDriver();
-	    driver.run(card1, card2, showing, count);
-	}
+	ActionDriver driver = new ActionDriver();
+	driver.run(card1, card2, showingStart, showingEnd, count);
     }
 }

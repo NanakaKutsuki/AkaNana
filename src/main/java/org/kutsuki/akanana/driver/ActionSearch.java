@@ -50,11 +50,6 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 	    this.strategyUtil = new StrategyUtil(true, AkaNanaSettings.DECKS);
 	}
 
-	// isPair
-	if (card1 == card2) {
-	    model.setSplitAllowed(true);
-	}
-
 	// findValue
 	int findValue = 0;
 	if (!isCardSpecific(card1, card2)) {
@@ -78,7 +73,7 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 
 	// play with actions
 	for (Action action : Action.values()) {
-	    if (action != Action.SPLIT || model.isSplitAllowed()) {
+	    if (action != Action.SPLIT || card1 == card2) {
 		runAction(action);
 	    }
 	}

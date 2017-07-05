@@ -15,8 +15,9 @@ import org.kutsuki.akanana.action.StrategyUtil;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
+// TODO UNFINISHED, DOESN'T WORK
 public class AkaNanaSearch {
-    private static final int SHOWING = 8;
+    private static final int SHOWING = 10;
     private static final int SEARCH_VALUE = 15;
 
     private static final BigDecimal TWO = new BigDecimal(2);
@@ -116,12 +117,6 @@ public class AkaNanaSearch {
 	}
     }
 
-    private void split(Hand playerHand) {
-	// TODO split
-	if (playerHand.isPair()) {
-	}
-    }
-
     private void dealerAction(List<Hand> playerHands) {
 	for (int rank = 11; rank >= 2; rank--) {
 	    Hand dealerHand = new Hand();
@@ -176,8 +171,6 @@ public class AkaNanaSearch {
 
 	    payForBets(playerHand, playerAction, i == 0);
 
-	    boolean win = false;
-	    boolean draw = false;
 	    if (playerHand.getValue() > 0) {
 		if (playerHand.isSurrender()) {
 		    addBankroll(playerAction, BigDecimal.ONE.divide(TWO, 2, RoundingMode.HALF_UP));
@@ -206,12 +199,10 @@ public class AkaNanaSearch {
 		}
 	    }
 
-	    // if (playerAction == Action.HIT && dealerHand2.getSecondCardRank()
-	    // == 7) {
-	    // System.out.println(playerHand + " vs " + dealerHand2 + " @@ " +
-	    // playerHand.getValue() + " vs "
-	    // + dealerHand2.getValue() + " !! " + dealerHand);
-	    // }
+	    if (playerAction == Action.HIT) {
+		System.out.println(playerHand + " vs " + dealerHand + " @@ " + playerHand.getValue() + " vs "
+			+ dealerHand2.getValue());
+	    }
 	}
     }
 

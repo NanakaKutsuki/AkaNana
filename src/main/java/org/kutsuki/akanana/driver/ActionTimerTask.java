@@ -2,6 +2,7 @@ package org.kutsuki.akanana.driver;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.Future;
@@ -11,19 +12,22 @@ import org.kutsuki.akanana.search.AkaNanaSettings;
 public class ActionTimerTask extends TimerTask {
     private List<Future<ActionModel>> futureList;
     private long start;
+    private Object lock;
 
-    public ActionTimerTask(List<Future<ActionModel>> futureList, long start) {
-	this.futureList = futureList;
-	this.start = start;
+    public ActionTimerTask() {
+	this.futureList = Collections.emptyList();
+	this.lock = new Object();
     }
 
     @Override
     public void run() {
 	int completed = 0;
 
-	for (Future<ActionModel> f : futureList) {
-	    if (f.isDone()) {
-		completed++;
+	synchronized (lock) {
+	    for (Future<ActionModel> f : futureList) {
+		if (f.isDone()) {
+		    completed++;
+		}
 	    }
 	}
 
@@ -31,20 +35,28 @@ public class ActionTimerTask extends TimerTask {
     }
 
     private void printStatus(int completed) {
-	BigDecimal timeDelta = BigDecimal.valueOf(System.currentTimeMillis() - start);
-	BigDecimal avgSpeed = BigDecimal.valueOf(completed).divide(timeDelta, 4, RoundingMode.HALF_UP);
-	BigDecimal rate = avgSpeed.multiply(AkaNanaSettings.THOUSAND).setScale(0, RoundingMode.HALF_UP);
+	BigDecimal elapsedTime = BigDecimal.valueOf(System.currentTimeMillis() - start);
+	BigDecimal rate = BigDecimal.valueOf(completed).divide(elapsedTime, 4, RoundingMode.HALF_UP)
+		.multiply(AkaNanaSettings.THOUSAND).setScale(0, RoundingMode.HALF_UP);
 
-	if (avgSpeed.compareTo(BigDecimal.ZERO) == 1) {
-	    BigDecimal timeLeft = AkaNanaSettings.TRIALS.divide(avgSpeed, 2, RoundingMode.HALF_UP).subtract(timeDelta);
+	if (rate.compareTo(BigDecimal.ZERO) == 1) {
+	    BigDecimal remainingTime = elapsedTime.multiply(AkaNanaSettings.TRIALS)
+		    .divide(BigDecimal.valueOf(completed), 2, RoundingMode.HALF_UP).subtract(elapsedTime);
 
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("Completed: ").append(completed);
 	    sb.append(", Rate: ").append(rate).append("a/s");
-	    sb.append(", Time Left: ").append(AkaNanaSettings.formatTime(timeLeft.longValue()));
+	    sb.append(", Time Left: ").append(AkaNanaSettings.formatTime(remainingTime.longValue()));
 	    System.out.println(sb.toString());
 	} else {
 	    System.out.println("Completed: " + completed + ", Rate: ?, Time Left: ?");
+	}
+    }
+
+    public void setFutureList(List<Future<ActionModel>> futureList, long start) {
+	synchronized (lock) {
+	    this.futureList = futureList;
+	    this.start = start;
 	}
     }
 }

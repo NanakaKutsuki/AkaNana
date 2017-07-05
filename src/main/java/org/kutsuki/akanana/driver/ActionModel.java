@@ -1,25 +1,53 @@
 package org.kutsuki.akanana.driver;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.TreeMap;
 
-public class ActionModel implements Serializable {
-    private static final long serialVersionUID = 2910406573791852766L;
+import org.kutsuki.akanana.action.Action;
 
-    private boolean splitAllowed;
+public class ActionModel {
     private BigDecimal doubleDown;
     private BigDecimal hit;
     private BigDecimal stand;
     private BigDecimal split;
     private BigDecimal surrender;
 
+    private String jobTitle;
+    private int confidence;
+
     public ActionModel() {
-	this.splitAllowed = false;
 	this.doubleDown = BigDecimal.ZERO;
 	this.hit = BigDecimal.ZERO;
 	this.stand = BigDecimal.ZERO;
 	this.split = BigDecimal.ZERO;
 	this.surrender = BigDecimal.ZERO;
+	this.jobTitle = null;
+	this.confidence = 0;
+    }
+
+    public Action getTopAction(boolean pair) {
+	TreeMap<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
+	treeMap.put(getDoubleDown(), Action.DOUBLE_DOWN);
+	treeMap.put(getHit(), Action.HIT);
+	treeMap.put(getStand(), Action.STAND);
+
+	if (pair) {
+	    treeMap.put(getSplit(), Action.SPLIT);
+	}
+
+	return treeMap.firstEntry().getValue();
+    }
+
+    public void merge(ActionModel rhs, boolean pair) {
+	setDoubleDown(getDoubleDown().add(rhs.getDoubleDown()));
+	setHit(getHit().add(rhs.getHit()));
+	setStand(getStand().add(rhs.getStand()));
+	setSurrender(getSurrender().add(rhs.getSurrender()));
+
+	if (pair) {
+	    setSplit(getSplit().add(rhs.getSplit()));
+	}
     }
 
     public BigDecimal getDoubleDown() {
@@ -62,11 +90,19 @@ public class ActionModel implements Serializable {
 	this.surrender = surrender;
     }
 
-    public boolean isSplitAllowed() {
-	return splitAllowed;
+    public String getJobTitle() {
+	return jobTitle;
     }
 
-    public void setSplitAllowed(boolean splitAllowed) {
-	this.splitAllowed = splitAllowed;
+    public void setJobTitle(String jobTitle) {
+	this.jobTitle = jobTitle;
+    }
+
+    public int getConfidence() {
+	return confidence;
+    }
+
+    public void setConfidence(int confidence) {
+	this.confidence = confidence;
     }
 }
