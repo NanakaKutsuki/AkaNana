@@ -121,8 +121,8 @@ public abstract class AbstractShoe {
 	    count = 0;
 	    hiddenPoint = 0;
 
-	    // burn one card
-	    getNextCard();
+	    // burn one card, don't count it
+	    getCard();
 	    reshuffled = true;
 	}
 

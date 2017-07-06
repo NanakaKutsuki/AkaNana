@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.driver;
+package org.kutsuki.akanana.inception;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Timer;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -19,26 +18,27 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.kutsuki.akanana.action.Action;
+import org.kutsuki.akanana.driver.ActionSearch;
 import org.kutsuki.akanana.search.AkaNanaConfidence;
 import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public class ActionDriver {
-    private static final long PERIOD = 60 * 1000;
+public class AkaNanaInception {
     private static final File OUTPUT_DIR = new File("output");
+    private static final int ENDING_POSITION = 75;
 
-    private ActionTimerTask timerTask;
     private ExecutorService es;
     private int cores;
-    private int trials;
+    private long start;
 
-    public ActionDriver(int trials) {
+    public AkaNanaInception() {
+	this.start = System.currentTimeMillis();
+	System.out.println(System.currentTimeMillis());
+	System.out.println(System.nanoTime());
 	this.cores = Runtime.getRuntime().availableProcessors();
 	this.es = Executors.newFixedThreadPool(cores);
-	this.timerTask = new ActionTimerTask(trials);
-	this.trials = trials;
 
 	if (!OUTPUT_DIR.exists()) {
 	    OUTPUT_DIR.mkdir();
@@ -46,9 +46,6 @@ public class ActionDriver {
     }
 
     public void run(int card1, int card2, int showingStart, int showingEnd, Integer count) {
-	Timer timer = new Timer(true);
-	timer.scheduleAtFixedRate(timerTask, PERIOD, PERIOD);
-
 	List<AkaNanaModel> resultList = new ArrayList<AkaNanaModel>();
 	for (int showing = showingEnd; showing >= showingStart; showing--) {
 	    resultList.add(search(card1, card2, showing, count));
@@ -56,7 +53,6 @@ public class ActionDriver {
 
 	// shutdown executor
 	es.shutdown();
-	timer.cancel();
 
 	outputCsv(resultList, card1 == card2);
     }
@@ -66,21 +62,23 @@ public class ActionDriver {
 	String title = parseJobTitle(card1, card2, showing, count);
 	System.out.println("Running: " + title + " with: " + cores + " cores!");
 
+	int startingPosition = 5;
+	if (count != null && count > 0) {
+	    startingPosition += count;
+	}
+
 	// generate input
 	List<Future<AkaNanaModel>> futureList = new ArrayList<>();
-	for (int i = 0; i < trials; i++) {
+	for (int position = startingPosition; position < ENDING_POSITION; position++) {
 	    Future<AkaNanaModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
 	    futureList.add(f);
 	}
-
-	long start = System.currentTimeMillis();
-	timerTask.setFutureList(futureList, start);
 
 	// map
 	AkaNanaModel result = new AkaNanaModel();
 	result.setJobTitle(title);
 
-	AkaNanaConfidence confidence = new AkaNanaConfidence(trials);
+	AkaNanaConfidence confidence = new AkaNanaConfidence(1);
 	for (int i = 0; i < futureList.size(); i++) {
 	    try {
 		// collect result
@@ -214,15 +212,14 @@ public class ActionDriver {
     }
 
     public static void main(String[] args) {
-	if (args.length != 3 && args.length != 4 && args.length != 5) {
-	    throw new IllegalArgumentException("card1, card2, showing, count, trials");
+	if (args.length != 3 && args.length != 4) {
+	    throw new IllegalArgumentException("card1, card2, showing, count");
 	}
 
 	int card1 = 0;
 	int card2 = 0;
 	int showingStart = 2;
 	int showingEnd = 11;
-	int trials = 1000000;
 	Integer count = null;
 
 	try {
@@ -255,16 +252,7 @@ public class ActionDriver {
 		count = null;
 	    }
 	}
-
-	if (args.length == 5) {
-	    try {
-		trials = Integer.parseInt(args[4]);
-	    } catch (NumberFormatException e) {
-		trials = 1000000;
-	    }
-	}
-
-	ActionDriver driver = new ActionDriver(trials);
-	driver.run(card1, card2, showingStart, showingEnd, count);
+	AkaNanaInception inception = new AkaNanaInception();
+	inception.run(card1, card2, showingStart, showingEnd, count);
     }
 }

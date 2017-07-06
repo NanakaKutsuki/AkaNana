@@ -17,7 +17,7 @@ import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
 // TODO UNFINISHED, DOESN'T WORK
-public class AkaNanaSearch {
+public class AkaNanaPermutation {
     private static final int SHOWING = 10;
     private static final int SEARCH_VALUE = 15;
 
@@ -37,7 +37,7 @@ public class AkaNanaSearch {
 
     private int count;
 
-    public AkaNanaSearch() {
+    public AkaNanaPermutation() {
 	this.doubleDown = BigDecimal.ZERO;
 	this.hit = BigDecimal.ZERO;
 	this.stand = BigDecimal.ZERO;
@@ -308,7 +308,7 @@ public class AkaNanaSearch {
     }
 
     public static void main(String[] args) {
-	AkaNanaSearch search = new AkaNanaSearch();
+	AkaNanaPermutation search = new AkaNanaPermutation();
 	search.run();
     }
 }
