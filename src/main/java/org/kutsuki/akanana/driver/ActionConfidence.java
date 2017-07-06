@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.kutsuki.akanana.action.Action;
-import org.kutsuki.akanana.search.AkaNanaSettings;
 
 public class ActionConfidence {
     private static final BigDecimal SAMPLE_SIZE = new BigDecimal(100);
@@ -18,8 +17,8 @@ public class ActionConfidence {
     private int subTrials;
     private Map<Action, Integer> confidenceMap = new HashMap<>();
 
-    public ActionConfidence() {
-	this.subTrials = AkaNanaSettings.TRIALS.divide(SAMPLE_SIZE, 0, RoundingMode.HALF_UP).intValue();
+    public ActionConfidence(int trials) {
+	this.subTrials = BigDecimal.valueOf(trials).divide(SAMPLE_SIZE, 0, RoundingMode.HALF_UP).intValue();
 	this.confidenceMap = new HashMap<>();
 	this.confidenceModel = new ActionModel();
 

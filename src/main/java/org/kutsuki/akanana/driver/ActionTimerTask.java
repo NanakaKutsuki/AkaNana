@@ -10,13 +10,15 @@ import java.util.concurrent.Future;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 
 public class ActionTimerTask extends TimerTask {
+    private BigDecimal trials;
     private List<Future<ActionModel>> futureList;
     private long start;
     private Object lock;
 
-    public ActionTimerTask() {
+    public ActionTimerTask(int trials) {
 	this.futureList = Collections.emptyList();
 	this.lock = new Object();
+	this.trials = new BigDecimal(trials);
     }
 
     @Override
@@ -40,7 +42,7 @@ public class ActionTimerTask extends TimerTask {
 		.multiply(AkaNanaSettings.THOUSAND).setScale(0, RoundingMode.HALF_UP);
 
 	if (rate.compareTo(BigDecimal.ZERO) == 1) {
-	    BigDecimal remainingTime = elapsedTime.multiply(AkaNanaSettings.TRIALS)
+	    BigDecimal remainingTime = elapsedTime.multiply(trials)
 		    .divide(BigDecimal.valueOf(completed), 2, RoundingMode.HALF_UP).subtract(elapsedTime);
 
 	    StringBuilder sb = new StringBuilder();

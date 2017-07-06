@@ -25,15 +25,22 @@ import org.kutsuki.akanana.shoe.Hand;
 
 public class ActionDriver {
     private static final long PERIOD = 60 * 1000;
+    private static final File OUTPUT_DIR = new File("output");
 
     private ActionTimerTask timerTask;
     private ExecutorService es;
     private int cores;
+    private int trials;
 
-    public ActionDriver() {
+    public ActionDriver(int trials) {
 	this.cores = Runtime.getRuntime().availableProcessors();
 	this.es = Executors.newFixedThreadPool(cores);
-	this.timerTask = new ActionTimerTask();
+	this.timerTask = new ActionTimerTask(trials);
+	this.trials = trials;
+
+	if (!OUTPUT_DIR.exists()) {
+	    OUTPUT_DIR.mkdir();
+	}
     }
 
     public void run(int card1, int card2, int showingStart, int showingEnd, Integer count) {
@@ -59,7 +66,7 @@ public class ActionDriver {
 
 	// generate input
 	List<Future<ActionModel>> futureList = new ArrayList<>();
-	for (int i = 0; i < AkaNanaSettings.TRIALS.intValue(); i++) {
+	for (int i = 0; i < trials; i++) {
 	    Future<ActionModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
 	    futureList.add(f);
 	}
@@ -71,7 +78,7 @@ public class ActionDriver {
 	ActionModel result = new ActionModel();
 	result.setJobTitle(title);
 
-	ActionConfidence confidence = new ActionConfidence();
+	ActionConfidence confidence = new ActionConfidence(trials);
 	for (int i = 0; i < futureList.size(); i++) {
 	    try {
 		// collect result
@@ -133,7 +140,8 @@ public class ActionDriver {
     }
 
     private void output(ActionModel model, boolean pair, int confidence, long runtime) {
-	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(model.getJobTitle() + ".txt")));) {
+	try (BufferedWriter bw = new BufferedWriter(
+		new FileWriter(new File(OUTPUT_DIR, model.getJobTitle() + ".txt")));) {
 	    String search = "\nSearch: " + model.getJobTitle() + " Confidence: " + confidence + Character.toString('%');
 	    System.out.println(search);
 	    bw.write(search);
@@ -167,7 +175,7 @@ public class ActionDriver {
 
     private void outputCsv(List<ActionModel> resultList, boolean pair) {
 	try (BufferedWriter bw = new BufferedWriter(
-		new FileWriter(new File(resultList.get(0).getJobTitle() + ".csv")));) {
+		new FileWriter(new File(OUTPUT_DIR, resultList.get(0).getJobTitle() + ".csv")));) {
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("Case").append(',');
 	    sb.append("Stand").append(',');
@@ -204,14 +212,15 @@ public class ActionDriver {
     }
 
     public static void main(String[] args) {
-	if (args.length != 3 && args.length != 4) {
-	    throw new IllegalArgumentException("card1, card2, showing, count");
+	if (args.length != 3 && args.length != 4 && args.length != 5) {
+	    throw new IllegalArgumentException("card1, card2, showing, trials, count");
 	}
 
 	int card1 = 0;
 	int card2 = 0;
 	int showingStart = 2;
 	int showingEnd = 11;
+	int trials = 1000000;
 	Integer count = null;
 
 	try {
@@ -245,7 +254,15 @@ public class ActionDriver {
 	    }
 	}
 
-	ActionDriver driver = new ActionDriver();
+	if (args.length == 5) {
+	    try {
+		trials = Integer.parseInt(args[4]);
+	    } catch (NumberFormatException e) {
+		trials = 1000000;
+	    }
+	}
+
+	ActionDriver driver = new ActionDriver(trials);
 	driver.run(card1, card2, showingStart, showingEnd, count);
     }
 }
