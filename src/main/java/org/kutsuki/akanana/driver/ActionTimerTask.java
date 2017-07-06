@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.Future;
 
+import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 
 public class ActionTimerTask extends TimerTask {
     private BigDecimal trials;
-    private List<Future<ActionModel>> futureList;
+    private List<Future<AkaNanaModel>> futureList;
     private long start;
     private Object lock;
 
@@ -26,7 +27,7 @@ public class ActionTimerTask extends TimerTask {
 	int completed = 0;
 
 	synchronized (lock) {
-	    for (Future<ActionModel> f : futureList) {
+	    for (Future<AkaNanaModel> f : futureList) {
 		if (f.isDone()) {
 		    completed++;
 		}
@@ -55,7 +56,7 @@ public class ActionTimerTask extends TimerTask {
 	}
     }
 
-    public void setFutureList(List<Future<ActionModel>> futureList, long start) {
+    public void setFutureList(List<Future<AkaNanaModel>> futureList, long start) {
 	synchronized (lock) {
 	    this.futureList = futureList;
 	    this.start = start;

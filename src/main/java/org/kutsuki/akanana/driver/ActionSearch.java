@@ -7,15 +7,17 @@ import java.util.concurrent.Callable;
 
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.action.StrategyUtil;
+import org.kutsuki.akanana.search.AbstractAkaNana;
+import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.shoe.AbstractShoe;
 import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public class ActionSearch extends AbstractAkaNana implements Callable<ActionModel> {
+public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
     private AbstractShoe shoe;
-    private ActionModel model;
+    private AkaNanaModel model;
     private Hand dealerHand;
     private List<Hand> playerHands;
     private List<List<Hand>> otherPlayers;
@@ -38,9 +40,9 @@ public class ActionSearch extends AbstractAkaNana implements Callable<ActionMode
 
     // call
     @Override
-    public ActionModel call() {
+    public AkaNanaModel call() {
 	initPlayers();
-	this.model = new ActionModel();
+	this.model = new AkaNanaModel();
 
 	if (shoe == null) {
 	    this.shoe = new AkaNanaShoe(AkaNanaSettings.DECKS, AkaNanaSettings.PLAYABLE);

@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.search;
+package org.kutsuki.akanana.driver;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,6 +12,7 @@ import java.util.TreeMap;
 
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.action.StrategyUtil;
+import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 

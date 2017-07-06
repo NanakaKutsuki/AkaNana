@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.driver;
+package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
 import java.util.List;

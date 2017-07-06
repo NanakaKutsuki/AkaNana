@@ -19,6 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.kutsuki.akanana.action.Action;
+import org.kutsuki.akanana.search.AkaNanaConfidence;
+import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
@@ -47,7 +49,7 @@ public class ActionDriver {
 	Timer timer = new Timer(true);
 	timer.scheduleAtFixedRate(timerTask, PERIOD, PERIOD);
 
-	List<ActionModel> resultList = new ArrayList<ActionModel>();
+	List<AkaNanaModel> resultList = new ArrayList<AkaNanaModel>();
 	for (int showing = showingEnd; showing >= showingStart; showing--) {
 	    resultList.add(search(card1, card2, showing, count));
 	}
@@ -59,15 +61,15 @@ public class ActionDriver {
 	outputCsv(resultList, card1 == card2);
     }
 
-    private ActionModel search(int card1, int card2, int showing, Integer count) {
+    private AkaNanaModel search(int card1, int card2, int showing, Integer count) {
 	boolean pair = card1 == card2;
 	String title = parseJobTitle(card1, card2, showing, count);
 	System.out.println("Running: " + title + " with: " + cores + " cores!");
 
 	// generate input
-	List<Future<ActionModel>> futureList = new ArrayList<>();
+	List<Future<AkaNanaModel>> futureList = new ArrayList<>();
 	for (int i = 0; i < trials; i++) {
-	    Future<ActionModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
+	    Future<AkaNanaModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
 	    futureList.add(f);
 	}
 
@@ -75,14 +77,14 @@ public class ActionDriver {
 	timerTask.setFutureList(futureList, start);
 
 	// map
-	ActionModel result = new ActionModel();
+	AkaNanaModel result = new AkaNanaModel();
 	result.setJobTitle(title);
 
-	ActionConfidence confidence = new ActionConfidence(trials);
+	AkaNanaConfidence confidence = new AkaNanaConfidence(trials);
 	for (int i = 0; i < futureList.size(); i++) {
 	    try {
 		// collect result
-		ActionModel model = futureList.get(i).get();
+		AkaNanaModel model = futureList.get(i).get();
 		confidence.add(model, i, pair);
 
 		// reduce result
@@ -139,7 +141,7 @@ public class ActionDriver {
 	return sb.toString();
     }
 
-    private void output(ActionModel model, boolean pair, int confidence, long runtime) {
+    private void output(AkaNanaModel model, boolean pair, int confidence, long runtime) {
 	try (BufferedWriter bw = new BufferedWriter(
 		new FileWriter(new File(OUTPUT_DIR, model.getJobTitle() + ".txt")));) {
 	    String search = "\nSearch: " + model.getJobTitle() + " Confidence: " + confidence + Character.toString('%');
@@ -173,7 +175,7 @@ public class ActionDriver {
 	}
     }
 
-    private void outputCsv(List<ActionModel> resultList, boolean pair) {
+    private void outputCsv(List<AkaNanaModel> resultList, boolean pair) {
 	try (BufferedWriter bw = new BufferedWriter(
 		new FileWriter(new File(OUTPUT_DIR, resultList.get(0).getJobTitle() + ".csv")));) {
 	    StringBuilder sb = new StringBuilder();
@@ -188,7 +190,7 @@ public class ActionDriver {
 	    bw.write(sb.toString());
 	    bw.newLine();
 
-	    for (ActionModel result : resultList) {
+	    for (AkaNanaModel result : resultList) {
 		sb = new StringBuilder();
 		sb.append(result.getJobTitle()).append(',');
 		sb.append(result.getStand().setScale(0, RoundingMode.HALF_UP)).append(',');

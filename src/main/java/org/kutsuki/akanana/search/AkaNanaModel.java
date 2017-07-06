@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.driver;
+package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.TreeMap;
 
 import org.kutsuki.akanana.action.Action;
 
-public class ActionModel {
+public class AkaNanaModel {
     private BigDecimal doubleDown;
     private BigDecimal hit;
     private BigDecimal stand;
@@ -16,7 +16,7 @@ public class ActionModel {
     private String jobTitle;
     private int confidence;
 
-    public ActionModel() {
+    public AkaNanaModel() {
 	this.doubleDown = BigDecimal.ZERO;
 	this.hit = BigDecimal.ZERO;
 	this.stand = BigDecimal.ZERO;
@@ -39,7 +39,7 @@ public class ActionModel {
 	return treeMap.firstEntry().getValue();
     }
 
-    public void merge(ActionModel rhs, boolean pair) {
+    public void merge(AkaNanaModel rhs, boolean pair) {
 	setDoubleDown(getDoubleDown().add(rhs.getDoubleDown()));
 	setHit(getHit().add(rhs.getHit()));
 	setStand(getStand().add(rhs.getStand()));

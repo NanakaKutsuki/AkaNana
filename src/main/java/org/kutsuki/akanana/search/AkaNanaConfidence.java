@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.driver;
+package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -10,24 +10,24 @@ import java.util.TreeMap;
 
 import org.kutsuki.akanana.action.Action;
 
-public class ActionConfidence {
+public class AkaNanaConfidence {
     private static final BigDecimal SAMPLE_SIZE = new BigDecimal(100);
 
-    private ActionModel confidenceModel;
+    private AkaNanaModel confidenceModel;
     private int subTrials;
     private Map<Action, Integer> confidenceMap = new HashMap<>();
 
-    public ActionConfidence(int trials) {
+    public AkaNanaConfidence(int trials) {
 	this.subTrials = BigDecimal.valueOf(trials).divide(SAMPLE_SIZE, 0, RoundingMode.HALF_UP).intValue();
 	this.confidenceMap = new HashMap<>();
-	this.confidenceModel = new ActionModel();
+	this.confidenceModel = new AkaNanaModel();
 
     }
 
-    public void add(ActionModel model, int i, boolean pair) {
+    public void add(AkaNanaModel model, int i, boolean pair) {
 	if (i % subTrials == 0 && i != 0) {
 	    finish(pair);
-	    confidenceModel = new ActionModel();
+	    confidenceModel = new AkaNanaModel();
 	}
 
 	confidenceModel.merge(model, pair);
