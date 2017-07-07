@@ -1,6 +1,8 @@
 package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.kutsuki.akanana.action.Action;
@@ -13,24 +15,39 @@ public abstract class AbstractAkaNana {
     private static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5");
     private static final BigDecimal TWO = new BigDecimal(2);
 
-    private boolean first, basicStrategy, hitSoft17, surrender;
-    private BigDecimal bankroll, bet, startingBet, totalBet;
-    private int numHands, startingCount;
+    private AbstractShoe shoe;
+    private boolean optimal;
+    private BigDecimal bankroll;
+    private BigDecimal bet;
+    private BigDecimal startingBet;
+    private BigDecimal totalBet;
+    private Hand dealerHand;
+    private List<Hand> playerHands;
+    private List<List<Hand>> otherPlayers;
 
     public abstract StrategyUtil getStrategyUtil();
 
-    public abstract void setupBet(int count);
+    public AbstractAkaNana() {
+	this.dealerHand = new Hand();
+	this.optimal = false;
+	this.otherPlayers = new ArrayList<List<Hand>>();
+	this.playerHands = new ArrayList<Hand>();
+
+	this.playerHands = new ArrayList<Hand>();
+	for (int i = 0; i < AkaNanaSettings.MAX_HANDS; i++) {
+	    playerHands.add(new Hand());
+	}
+    }
 
     // makeBet
-    public void makeBet(int multiple) {
-	bet = startingBet.multiply(BigDecimal.valueOf(multiple));
+    public void makeBet(BigDecimal multiple) {
+	bet = startingBet.multiply(multiple);
 	bankroll = bankroll.subtract(bet);
 	totalBet = bet;
     }
 
     // distributeCards
-    public void distributeCards(List<Hand> playerHands, Hand dealerHand, List<List<Hand>> otherPlayers,
-	    AbstractShoe shoe) {
+    public void distributeCards() {
 	// clear table
 	for (Hand playerHand : playerHands) {
 	    playerHand.clear();
@@ -46,9 +63,6 @@ public abstract class AbstractAkaNana {
 	// check for reshuffle
 	shoe.checkReshuffle(false);
 
-	// set starting count
-	startingCount = shoe.getCount();
-
 	// deal cards
 	for (int i = 0; i < 2; i++) {
 	    // deal to other players first
@@ -61,69 +75,30 @@ public abstract class AbstractAkaNana {
 
 	    // deal dealers card
 	    if (i == 0) {
-		dealerHand.addCard(shoe.getNextCard());
-	    } else {
 		dealerHand.addCard(shoe.getHiddenCardForDealer());
-	    }
-	}
-    }
-
-    // playOtherPlayers
-    public void playOtherPlayers(List<List<Hand>> otherPlayers, Hand dealerHand, AbstractShoe shoe, int maxHands) {
-	// if dealer doesn't have blackjack
-	if (!dealerHand.isBlackjack()) {
-	    // go through other players
-	    for (List<Hand> otherPlayerHands : otherPlayers) {
-		playAction(otherPlayerHands, dealerHand.showingRank(), shoe, maxHands, false, null);
-	    }
-	}
-    }
-
-    // offerInsurance
-    public void offerInsurance(List<Hand> playerHands, Hand dealerHand, int decks, int count) {
-	// only offer insurance if dealer is showing an ace
-	if (dealerHand.showingRank() == 11) {
-	    boolean insurance = false;
-
-	    if (decks == 2 && count >= 1) {
-		insurance = true;
-	    } else if (count >= 5) {
-		insurance = true;
-	    }
-
-	    // buying insurance
-	    if (insurance) {
-		bankroll = bankroll.subtract(bet.divide(TWO));
-		totalBet = totalBet.subtract(bet.divide(TWO));
-		playerHands.get(0).setInsurance(true);
+	    } else {
+		dealerHand.addCard(shoe.getNextCard());
 	    }
 	}
     }
 
     // playerAction
-    public void playerAction(List<Hand> playerHands, Hand dealerHand, AbstractShoe shoe, int maxHands) {
+    public void playerAction(Action forcedAction) {
 	if (!dealerHand.isBlackjack()) {
-	    playAction(playerHands, dealerHand.showingRank(), shoe, maxHands, true, null);
+	    playAction(forcedAction);
 	}
-    }
 
-    // playerAction
-    public void playerAction(List<Hand> playerHands, Hand dealerHand, AbstractShoe shoe, int maxHands,
-	    Action forcedAction) {
-	if (!dealerHand.isBlackjack()) {
-	    playAction(playerHands, dealerHand.showingRank(), shoe, maxHands, true, forcedAction);
-	}
+	dealerAction();
     }
 
     // dealerAction
-    public void dealerAction(List<Hand> playerHands, List<List<Hand>> otherPlayers, Hand dealerHand,
-	    AbstractShoe shoe) {
+    private void dealerAction() {
 	// count hidden dealer card
 	shoe.applyHiddenPoint();
 
 	// only play out dealer hand if live cards
-	if (isDealerPlayable(playerHands, otherPlayers)) {
-	    if (!hitSoft17) {
+	if (isDealerPlayable()) {
+	    if (!AkaNanaSettings.HIT_SOFT_17) {
 		while (dealerHand.getValue() < 17) {
 		    dealerHand.addCard(shoe.getNextCard());
 		}
@@ -134,29 +109,12 @@ public abstract class AbstractAkaNana {
 		}
 	    }
 	}
-    }
 
-    // isDealerPlayable
-    private boolean isDealerPlayable(List<Hand> playerHands, List<List<Hand>> otherPlayers) {
-	for (Hand hand : playerHands) {
-	    if (!hand.isBust() && !hand.isBlackjack() && !hand.isSurrender() && hand.getValue() > 0) {
-		return true;
-	    }
-	}
-
-	for (List<Hand> otherPlayerHands : otherPlayers) {
-	    for (Hand hand : otherPlayerHands) {
-		if (!hand.isBust() && !hand.isBlackjack() && !hand.isSurrender() && hand.getValue() > 0) {
-		    return true;
-		}
-	    }
-	}
-
-	return false;
+	payout();
     }
 
     // payout
-    public void payout(List<Hand> playerHands, Hand dealerHand) {
+    private void payout() {
 	// dealer blackjack
 	if (playerHands.get(0).isBlackjack()) {
 	    if (!dealerHand.isBlackjack()) {
@@ -206,59 +164,42 @@ public abstract class AbstractAkaNana {
 	}
     }
 
-    // getBankroll
-    public BigDecimal getBankroll() {
-	return bankroll;
-    }
+    // isDealerPlayable
+    private boolean isDealerPlayable() {
+	boolean playable = false;
 
-    // getStartingCount
-    public int getStartingCount() {
-	return startingCount;
-    }
+	Iterator<Hand> itr = playerHands.iterator();
+	while (!playable && itr.hasNext()) {
+	    Hand playerHand = itr.next();
 
-    // getTotalBet
-    public BigDecimal getTotalBet() {
-	return totalBet;
-    }
+	    if (!playerHand.isBust() && !playerHand.isBlackjack() && !playerHand.isSurrender()
+		    && playerHand.getValue() > 0) {
+		playable = true;
+	    }
+	}
 
-    // isSurrender
-    public boolean isSurrender() {
-	return surrender;
-    }
+	Iterator<List<Hand>> itr2 = otherPlayers.iterator();
+	while (!playable && itr2.hasNext()) {
+	    itr = itr2.next().iterator();
+	    while (!playable && itr.hasNext()) {
+		Hand otherHand = itr.next();
+		if (!otherHand.isBust() && !otherHand.isBlackjack() && !otherHand.isSurrender()
+			&& otherHand.getValue() > 0) {
+		    playable = true;
+		}
+	    }
+	}
 
-    // setBankroll
-    public void setBankroll(BigDecimal bankroll) {
-	this.bankroll = bankroll;
-    }
-
-    // setBasicStrategy
-    public void setBasicStrategy(boolean basicStrategy) {
-	this.basicStrategy = basicStrategy;
-    }
-
-    // setHitSoft17
-    public void setHitSoft17(boolean hitSoft17) {
-	this.hitSoft17 = hitSoft17;
-    }
-
-    // setStartingBet
-    public void setStartingBet(BigDecimal startingBet) {
-	this.startingBet = startingBet;
-    }
-
-    // setSurrender
-    public void setSurrender(boolean surrender) {
-	this.surrender = surrender;
+	return playable;
     }
 
     // playAction
-    private void playAction(List<Hand> hands, int showing, AbstractShoe shoe, int maxHands, boolean player,
-	    Action forcedAction) {
-	numHands = 1;
+    private void playAction(Action forcedAction) {
+	int numHands = 1;
 
-	for (int i = 0; i < hands.size(); i++) {
-	    first = true;
-	    Hand hand = hands.get(i);
+	for (int i = 0; i < playerHands.size(); i++) {
+	    boolean first = true;
+	    Hand hand = playerHands.get(i);
 
 	    if (i == 0 || hand.isSplit()) {
 		Action action = Action.HIT;
@@ -267,7 +208,7 @@ public abstract class AbstractAkaNana {
 		if (hand.isSplit()) {
 		    hand.addCard(shoe.getNextCard());
 
-		    if (hand.getFirstCardRank() == 11) {
+		    if (hand.getCardValue1() == 11) {
 			action = Action.STAND;
 		    }
 		}
@@ -279,40 +220,38 @@ public abstract class AbstractAkaNana {
 			action = forcedAction;
 			first = false;
 		    } else if (first && forcedAction != null && hand.isPair() && hand.isSplit()
-			    && numHands < maxHands) {
+			    && numHands < AkaNanaSettings.MAX_HANDS) {
 			action = forcedAction;
 			first = false;
 		    } else {
-			if (player && !basicStrategy) {
+			if (optimal) {
 			    // optimal play
-			    action = getStrategyUtil().getAction(hand, showing, numHands == maxHands, shoe.getCount());
+			    action = getStrategyUtil().getAction(hand, dealerHand.showingValue(),
+				    numHands == AkaNanaSettings.MAX_HANDS, shoe.getCount());
 			} else {
 			    // basic strategy play
-			    action = getStrategyUtil().getAction(hand, showing, numHands == maxHands, -100);
+			    action = getStrategyUtil().getAction(hand, dealerHand.showingValue(),
+				    numHands == AkaNanaSettings.MAX_HANDS, -100);
 			}
 		    }
 
 		    if (action.equals(Action.HIT)) {
 			hand.addCard(shoe.getNextCard());
 		    } else if (action.equals(Action.DOUBLE_DOWN)) {
-			if (player) {
-			    bankroll = bankroll.subtract(bet);
-			    totalBet = totalBet.add(bet);
-			}
+			bankroll = bankroll.subtract(bet);
+			totalBet = totalBet.add(bet);
 
 			hand.addCard(shoe.getNextCard());
 			hand.setDoubleDown(true);
 		    } else if (action.equals(Action.SURRENDER)) {
 			hand.setSurrender(true);
 		    } else if (action.equals(Action.SPLIT)) {
-			if (player) {
-			    bankroll = bankroll.subtract(bet);
-			    totalBet = totalBet.add(bet);
-			}
+			bankroll = bankroll.subtract(bet);
+			totalBet = totalBet.add(bet);
 
 			Card split = hand.getHand().remove(1);
-			hands.get(i + j).addCard(split);
-			hands.get(i + j).setSplit(true);
+			playerHands.get(i + j).addCard(split);
+			playerHands.get(i + j).setSplit(true);
 			numHands++;
 			j++;
 
@@ -320,12 +259,57 @@ public abstract class AbstractAkaNana {
 			hand.setSplit(true);
 			first = true;
 
-			if (hand.getFirstCardRank() == 11) {
+			if (hand.getCardValue1() == 11) {
 			    action = Action.STAND;
 			}
 		    }
 		}
 	    }
 	}
+    }
+
+    // getBankroll
+    public BigDecimal getBankroll() {
+	return bankroll;
+    }
+
+    // setBankroll
+    public void setBankroll(BigDecimal bankroll) {
+	this.bankroll = bankroll;
+    }
+
+    // getDealerHand
+    public Hand getDealerHand() {
+	return dealerHand;
+    }
+
+    // setOptimal
+    public void setOptimal(boolean optimal) {
+	this.optimal = optimal;
+    }
+
+    // getPlayerHands
+    public List<Hand> getPlayerHands() {
+	return playerHands;
+    }
+
+    // getShoe
+    public AbstractShoe getShoe() {
+	return shoe;
+    }
+
+    // setShoe
+    public void setShoe(AbstractShoe shoe) {
+	this.shoe = shoe;
+    }
+
+    // setStartingBet
+    public void setStartingBet(BigDecimal startingBet) {
+	this.startingBet = startingBet;
+    }
+
+    // getTotalBet
+    public BigDecimal getTotalBet() {
+	return totalBet;
     }
 }

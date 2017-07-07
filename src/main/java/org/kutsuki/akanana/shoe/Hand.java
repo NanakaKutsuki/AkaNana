@@ -92,8 +92,8 @@ public class Hand {
 	value = 0;
     }
 
-    // getFirstCardRank
-    public int getFirstCardRank() {
+    // getCardValue1
+    public int getCardValue1() {
 	return hand.get(0).getValue();
     }
 
@@ -102,8 +102,8 @@ public class Hand {
 	return hand;
     }
 
-    // getSecondCardRank
-    public int getSecondCardRank() {
+    // getCardValue2
+    public int getCardValue2() {
 	return hand.get(1).getValue();
     }
 
@@ -119,7 +119,7 @@ public class Hand {
 
     // isBlackjack
     public boolean isBlackjack() {
-	return !split && hand.size() == 2 && value == 21;
+	return !isSplit() && size() == 2 && getValue() == 21;
     }
 
     // isBust
@@ -139,7 +139,7 @@ public class Hand {
 
     // isPair
     public boolean isPair() {
-	return getFirstCardRank() == getSecondCardRank();
+	return getCardValue1() == getCardValue2();
     }
 
     // isSplit
@@ -172,9 +172,9 @@ public class Hand {
 	this.surrender = surrender;
     }
 
-    // showingRank
-    public int showingRank() {
-	return getSecondCardRank();
+    // showingValue
+    public int showingValue() {
+	return getCardValue2();
     }
 
     // size

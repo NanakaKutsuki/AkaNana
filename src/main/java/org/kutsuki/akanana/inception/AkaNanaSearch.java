@@ -1,9 +1,7 @@
 package org.kutsuki.akanana.inception;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.kutsuki.akanana.action.Action;
@@ -11,17 +9,13 @@ import org.kutsuki.akanana.action.StrategyUtil;
 import org.kutsuki.akanana.search.AbstractAkaNana;
 import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
-import org.kutsuki.akanana.shoe.AbstractShoe;
 import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
 public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
-    private AbstractShoe shoe;
     private AkaNanaModel model;
-    private Hand dealerHand;
-    private List<Hand> playerHands;
-    private List<List<Hand>> otherPlayers;
+
     private StrategyUtil strategyUtil;
 
     private Integer count;
@@ -32,7 +26,7 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 
     // constructor
     public AkaNanaSearch(int card1, int card2, int showing, Integer count, int position) {
-	setSettings(card1, card2, showing, count, position, null, null);
+	setSettings(card1, card2, showing, count, position);
     }
 
     @Override
@@ -43,11 +37,10 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
     // call
     @Override
     public AkaNanaModel call() {
-	initPlayers();
 	this.model = new AkaNanaModel();
 
-	if (shoe == null) {
-	    this.shoe = new AkaNanaShoe(AkaNanaSettings.DECKS, AkaNanaSettings.PLAYABLE);
+	if (getShoe() == null) {
+	    setShoe(new AkaNanaShoe(AkaNanaSettings.DECKS, AkaNanaSettings.PLAYABLE));
 	}
 
 	if (strategyUtil == null) {
@@ -55,7 +48,7 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	}
 
 	// play until cards are found
-	searchShoe(card1, card2, showing, count, position);
+	searchShoe();
 
 	// play with actions
 	for (Action action : Action.values()) {
@@ -70,11 +63,9 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
     private void runAction(Action action) {
 	setStartingBet(BigDecimal.ONE);
 	setBankroll(BigDecimal.ZERO);
-	setupBet(-100);
-	rollbackShoe(playerHands, dealerHand, shoe);
-	playerAction(playerHands, dealerHand, shoe, AkaNanaSettings.MAX_HANDS, action);
-	dealerAction(playerHands, otherPlayers, dealerHand, shoe);
-	payout(playerHands, dealerHand);
+	makeBet(BigDecimal.ONE);
+	rollbackShoe();
+	playerAction(action);
 
 	switch (action) {
 	case DOUBLE_DOWN:
@@ -98,24 +89,21 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
     }
 
     // searchShoe
-    public void searchShoe(int card1, int card2, int showing, Integer count, int position) {
-	// clear table
-	initPlayers();
-
-	for (Hand playerHand : playerHands) {
+    public void searchShoe() {
+	for (Hand playerHand : getPlayerHands()) {
 	    playerHand.clear();
 	}
-	Hand playerHand = playerHands.get(0);
+	Hand playerHand = getPlayerHands().get(0);
 
 	boolean found = false;
 	while (!found) {
 	    playerHand.clear();
-	    dealerHand.clear();
-	    shoe.checkReshuffle(true);
+	    getDealerHand().clear();
+	    getShoe().checkReshuffle(true);
 
 	    // if( count != null )
 	    for (int i = 1; i < position; i++) {
-		shoe.getNextCard();
+		getShoe().getNextCard();
 	    }
 
 	    found = swap(card1, position);
@@ -127,13 +115,13 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 		    found = swap(showing, position + 3);
 
 		    // set rollback point
-		    shoe.setRollback();
-		    shoe.getNextCard();
-		    shoe.getHiddenCardForDealer();
-		    shoe.getNextCard();
-		    shoe.getNextCard();
+		    getShoe().setRollback();
+		    getShoe().getNextCard();
+		    getShoe().getHiddenCardForDealer();
+		    getShoe().getNextCard();
+		    getShoe().getNextCard();
 
-		    if (count != null && count != shoe.getCount()) {
+		    if (count != null && count != getShoe().getCount()) {
 			found = false;
 		    }
 		}
@@ -141,32 +129,25 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	}
 
 	// rollback
-	shoe.rollback();
+	getShoe().rollback();
 
 	// deal cards
-	playerHand.addCard(shoe.getNextCard());
-	dealerHand.addCard(shoe.getHiddenCardForDealer());
-	playerHand.addCard(shoe.getNextCard());
-	dealerHand.addCard(shoe.getNextCard());
-
-	// play out
-	setStartingBet(BigDecimal.ZERO);
-	setBankroll(BigDecimal.ZERO);
-	setupBet(-100);
-	playerAction(playerHands, dealerHand, shoe, AkaNanaSettings.MAX_HANDS);
-	dealerAction(playerHands, otherPlayers, dealerHand, shoe);
+	playerHand.addCard(getShoe().getNextCard());
+	getDealerHand().addCard(getShoe().getHiddenCardForDealer());
+	playerHand.addCard(getShoe().getNextCard());
+	getDealerHand().addCard(getShoe().getNextCard());
     }
 
     private boolean swap(int rank, int position) {
-	int i = shoe.getShoe().size() - 1;
+	int i = getShoe().getShoe().size() - 1;
 	int endPos = position + 4;
 	boolean success = false;
 
 	while (!success && i >= endPos) {
-	    Card card = shoe.getShoe().get(i);
+	    Card card = getShoe().getShoe().get(i);
 
 	    if (card.getValue() == rank) {
-		Collections.swap(shoe.getShoe(), i, position);
+		Collections.swap(getShoe().getShoe(), i, position);
 		success = true;
 	    }
 
@@ -177,60 +158,36 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
     }
 
     // rollbackShoe
-    public void rollbackShoe(List<Hand> playerHands, Hand dealerHand, AbstractShoe shoe) {
+    public void rollbackShoe() {
 	// clear table
-	for (Hand playerHand : playerHands) {
+	for (Hand playerHand : getPlayerHands()) {
 	    playerHand.clear();
 	}
-	Hand playerHand = playerHands.get(0);
+	Hand playerHand = getPlayerHands().get(0);
 
 	// clear
 	playerHand.clear();
-	dealerHand.clear();
+	getDealerHand().clear();
 
 	// rollback
-	shoe.rollback();
+	getShoe().rollback();
 
 	// deal cards
-	playerHand.addCard(shoe.getNextCard());
-	dealerHand.addCard(shoe.getHiddenCardForDealer());
-	playerHand.addCard(shoe.getNextCard());
-	dealerHand.addCard(shoe.getNextCard());
+	playerHand.addCard(getShoe().getNextCard());
+	getDealerHand().addCard(getShoe().getHiddenCardForDealer());
+	playerHand.addCard(getShoe().getNextCard());
+	getDealerHand().addCard(getShoe().getNextCard());
     }
 
-    // initPlayers
-    public void initPlayers() {
-	this.dealerHand = new Hand();
-	this.otherPlayers = new ArrayList<List<Hand>>();
-	this.playerHands = new ArrayList<Hand>();
-
-	this.playerHands = new ArrayList<Hand>();
-	for (int i = 0; i < AkaNanaSettings.MAX_HANDS; i++) {
-	    playerHands.add(new Hand());
-	}
+    public void setStrategy(StrategyUtil strategyUtil) {
+	this.strategyUtil = strategyUtil;
     }
 
-    // setupBet
-    public void setupBet(int count) {
-	makeBet(1);
-    }
-
-    public List<Hand> getPlayerHands() {
-	return playerHands;
-    }
-
-    public Hand getDealerHand() {
-	return dealerHand;
-    }
-
-    public void setSettings(int card1, int card2, int showing, Integer count, int position, AbstractShoe shoe,
-	    StrategyUtil strategyUtil) {
+    public void setSettings(int card1, int card2, int showing, Integer count, int position) {
 	this.card1 = card1;
 	this.card2 = card2;
 	this.showing = showing;
 	this.count = count;
 	this.position = position;
-	this.shoe = shoe;
-	this.strategyUtil = strategyUtil;
     }
 }

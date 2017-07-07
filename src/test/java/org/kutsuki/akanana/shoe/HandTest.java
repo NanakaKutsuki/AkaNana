@@ -14,7 +14,7 @@ public class HandTest {
 	hand.addCard(new Card(14, 'c'));
 
 	assertEquals("Unexpected Size", hand.size(), 2);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 11);
+	assertEquals("Unexpected Showing Rank", hand.showingValue(), 11);
 	assertEquals("Unexpected Soft", hand.getSoft(), 10);
 	assertEquals("Unexpected String", hand.toString(), "Tc Ac");
 	assertEquals("Unexpected Value", hand.getValue(), 21);
@@ -28,7 +28,7 @@ public class HandTest {
 	hand.addCard(new Card(12, 'c'));
 
 	assertEquals("Unexpected Size", hand.size(), 4);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 5);
+	assertEquals("Unexpected Showing Rank", hand.showingValue(), 5);
 	assertEquals("Unexpected Soft", hand.getSoft(), 0);
 	assertEquals("Unexpected String", hand.toString(), "Ac 5c Jc Qc");
 	assertEquals("Unexpected Value", hand.getValue(), 26);
@@ -40,7 +40,7 @@ public class HandTest {
 	hand.addCard(new Card(2, 's'));
 
 	assertEquals("Unexpected Size", hand.size(), 2);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 2);
+	assertEquals("Unexpected Showing Rank", hand.showingValue(), 2);
 	assertEquals("Unexpected Soft", hand.getSoft(), 0);
 	assertEquals("Unexpected String", hand.toString(), "2c 2s");
 	assertEquals("Unexpected Value", hand.getValue(), 4);
@@ -53,7 +53,7 @@ public class HandTest {
 	hand.setSplit(true);
 
 	assertEquals("Unexpected Size", hand.size(), 2);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 11);
+	assertEquals("Unexpected Showing Rank", hand.showingValue(), 11);
 	assertEquals("Unexpected Soft", hand.getSoft(), 10);
 	assertEquals("Unexpected String", hand.toString(), "Tc Ac");
 	assertEquals("Unexpected Value", hand.getValue(), 21);
@@ -66,7 +66,7 @@ public class HandTest {
 	hand.addCard(new Card(10, 'c'));
 
 	assertEquals("Unexpected Size", hand.size(), 3);
-	assertEquals("Unexpected Showing Rank", hand.showingRank(), 5);
+	assertEquals("Unexpected Showing Rank", hand.showingValue(), 5);
 	assertEquals("Unexpected Soft", hand.getSoft(), 0);
 	assertEquals("Unexpected String", hand.toString(), "6c 5c Tc");
 	assertEquals("Unexpected Value", hand.getValue(), 21);

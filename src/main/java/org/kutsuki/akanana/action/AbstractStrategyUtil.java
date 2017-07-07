@@ -43,8 +43,8 @@ public abstract class AbstractStrategyUtil {
     private Action splitUtil() {
 	Action action = null;
 
-	if (!maxHands && hand.getFirstCardRank() == hand.getSecondCardRank()) {
-	    action = split(hand.getFirstCardRank());
+	if (!maxHands && hand.getCardValue1() == hand.getCardValue2()) {
+	    action = split(hand.getCardValue1());
 	}
 
 	return action != null ? action : doubleDownUtil();
