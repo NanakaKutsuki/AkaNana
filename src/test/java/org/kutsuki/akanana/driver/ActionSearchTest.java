@@ -19,7 +19,7 @@ public class ActionSearchTest {
     private static final int DECKS = 6;
     private static final int PLAYABLE = 4 * DECKS;
     private static final int POSITION = 50;
-    private static final StrategyUtil BASIC = new StrategyUtil(true, DECKS);
+    private static final StrategyUtil BASIC = new StrategyUtil(DECKS, true);
 
     @Test
     public void testFindShoeByValue() {

@@ -84,13 +84,10 @@ public class AkaNanaInception {
 	String title = parseTitle(card1, card2, showing, count);
 	System.out.println("Running: " + title);
 
-	int startingPosition = 1;
-	if (count != null) {
+	int startingPosition = 5;
+	if (count != null && count > 0) {
 	    startingPosition = 5;
-
-	    if (count > 0) {
-		startingPosition += count;
-	    }
+	    startingPosition += count;
 	}
 
 	// generate input

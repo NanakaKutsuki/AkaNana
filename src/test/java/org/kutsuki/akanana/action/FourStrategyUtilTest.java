@@ -11,8 +11,8 @@ public class FourStrategyUtilTest {
     private StrategyUtil surrenderUtil;
 
     public FourStrategyUtilTest() {
-	this.strategyUtil = new StrategyUtil(false, 4);
-	this.surrenderUtil = new StrategyUtil(true, 4);
+	this.strategyUtil = new StrategyUtil(4, false);
+	this.surrenderUtil = new StrategyUtil(4, true);
     }
 
     @Test

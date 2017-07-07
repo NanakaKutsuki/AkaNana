@@ -44,7 +44,7 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	}
 
 	if (strategyUtil == null) {
-	    this.strategyUtil = new StrategyUtil(true, AkaNanaSettings.DECKS);
+	    this.strategyUtil = new StrategyUtil(AkaNanaSettings.DECKS, true);
 	}
 
 	// play until cards are found

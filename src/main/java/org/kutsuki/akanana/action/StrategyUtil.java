@@ -5,7 +5,7 @@ import org.kutsuki.akanana.shoe.Hand;
 public class StrategyUtil {
     private AbstractStrategyUtil strategyUtil;
 
-    public StrategyUtil(boolean surrenderAllowed, int decks) {
+    public StrategyUtil(int decks, boolean surrenderAllowed) {
 	if (decks == 2) {
 	    this.strategyUtil = TwoStrategyUtil.getInstance(surrenderAllowed);
 	} else {
