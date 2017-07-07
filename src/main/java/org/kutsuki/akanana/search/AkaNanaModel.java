@@ -13,7 +13,7 @@ public class AkaNanaModel {
     private BigDecimal split;
     private BigDecimal surrender;
 
-    private String jobTitle;
+    private String title;
     private int confidence;
 
     public AkaNanaModel() {
@@ -22,31 +22,35 @@ public class AkaNanaModel {
 	this.stand = BigDecimal.ZERO;
 	this.split = BigDecimal.ZERO;
 	this.surrender = BigDecimal.ZERO;
-	this.jobTitle = null;
+	this.title = null;
 	this.confidence = 0;
     }
 
-    public Action getTopAction(boolean pair) {
+    public Action getTopAction(boolean splitAllowed) {
 	TreeMap<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
 	treeMap.put(getDoubleDown(), Action.DOUBLE_DOWN);
 	treeMap.put(getHit(), Action.HIT);
 	treeMap.put(getStand(), Action.STAND);
 
-	if (pair) {
+	if (splitAllowed) {
 	    treeMap.put(getSplit(), Action.SPLIT);
 	}
 
 	return treeMap.firstEntry().getValue();
     }
 
-    public void merge(AkaNanaModel rhs, boolean pair) {
+    public void merge(AkaNanaModel rhs, boolean splitAllowed) {
 	setDoubleDown(getDoubleDown().add(rhs.getDoubleDown()));
 	setHit(getHit().add(rhs.getHit()));
 	setStand(getStand().add(rhs.getStand()));
 	setSurrender(getSurrender().add(rhs.getSurrender()));
 
-	if (pair) {
+	if (splitAllowed) {
 	    setSplit(getSplit().add(rhs.getSplit()));
+	}
+
+	if (getTitle() == null) {
+	    setTitle(rhs.getTitle());
 	}
     }
 
@@ -90,12 +94,12 @@ public class AkaNanaModel {
 	this.surrender = surrender;
     }
 
-    public String getJobTitle() {
-	return jobTitle;
+    public String getTitle() {
+	return title;
     }
 
-    public void setJobTitle(String jobTitle) {
-	this.jobTitle = jobTitle;
+    public void setTitle(String title) {
+	this.title = title;
     }
 
     public int getConfidence() {

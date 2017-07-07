@@ -1,7 +1,8 @@
-package org.kutsuki.akanana.driver;
+package org.kutsuki.akanana.inception;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -15,7 +16,7 @@ import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
+public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
     private AbstractShoe shoe;
     private AkaNanaModel model;
     private Hand dealerHand;
@@ -26,11 +27,12 @@ public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaMod
     private Integer count;
     private int card1;
     private int card2;
+    private int position;
     private int showing;
 
     // constructor
-    public ActionSearch(int card1, int card2, int showing, Integer count) {
-	setSettings(card1, card2, showing, count, null, null);
+    public AkaNanaSearch(int card1, int card2, int showing, Integer count, int position) {
+	setSettings(card1, card2, showing, count, position, null, null);
     }
 
     @Override
@@ -52,26 +54,8 @@ public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaMod
 	    this.strategyUtil = new StrategyUtil(true, AkaNanaSettings.DECKS);
 	}
 
-	// findValue
-	int findValue = 0;
-	if (!isCardSpecific(card1, card2)) {
-	    Hand hand = new Hand();
-	    if (card1 == 11) {
-		hand.addCard(new Card(14, 'x'));
-	    } else {
-		hand.addCard(new Card(card1, 'x'));
-	    }
-
-	    if (card2 == 11) {
-		hand.addCard(new Card(14, 'x'));
-	    } else {
-		hand.addCard(new Card(card2, 'x'));
-	    }
-	    findValue = hand.getValue();
-	}
-
 	// play until cards are found
-	searchShoe(card1, card2, findValue, showing, count);
+	searchShoe(card1, card2, showing, count, position);
 
 	// play with actions
 	for (Action action : Action.values()) {
@@ -81,25 +65,6 @@ public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaMod
 	}
 
 	return model;
-    }
-
-    // isPlayerHandFound
-    private boolean isPlayerHandFound(int card1, int card2, int findValue) {
-	boolean found = false;
-	Hand playerHand = playerHands.get(0);
-
-	if (isCardSpecific(card1, card2)) {
-	    found = (playerHand.getFirstCardRank() == card1 && playerHand.getSecondCardRank() == card2)
-		    || (playerHand.getFirstCardRank() == card2 && playerHand.getSecondCardRank() == card1);
-	} else {
-	    found = playerHand.getValue() == findValue && playerHand.getSoft() == 0;
-	}
-
-	return found;
-    }
-
-    private boolean isCardSpecific(int card1, int card2) {
-	return card1 == card2 || card1 == 11 || card2 == 11;
     }
 
     private void runAction(Action action) {
@@ -133,46 +98,82 @@ public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaMod
     }
 
     // searchShoe
-    public void searchShoe(int card1, int card2, int findValue, int showing, Integer count) {
+    public void searchShoe(int card1, int card2, int showing, Integer count, int position) {
 	// clear table
+	initPlayers();
+
 	for (Hand playerHand : playerHands) {
 	    playerHand.clear();
 	}
-
-	boolean playerOk = false;
-	boolean dealerOk = false;
-	boolean countOk = false;
 	Hand playerHand = playerHands.get(0);
 
-	while (!(playerOk && dealerOk && countOk)) {
-	    // clear
+	boolean found = false;
+	while (!found) {
 	    playerHand.clear();
 	    dealerHand.clear();
+	    shoe.checkReshuffle(true);
 
-	    // check for reshuffle
-	    shoe.reshuffle();
+	    // if( count != null )
+	    for (int i = 1; i < position; i++) {
+		shoe.getNextCard();
+	    }
 
-	    // set rollback point
-	    shoe.setRollback();
+	    found = swap(card1, position);
 
-	    // deal cards
-	    playerHand.addCard(shoe.getNextCard());
-	    dealerHand.addCard(shoe.getHiddenCardForDealer());
-	    playerHand.addCard(shoe.getNextCard());
-	    dealerHand.addCard(shoe.getNextCard());
+	    if (found) {
+		found = swap(card2, position + 2);
 
-	    // check if cards found
-	    playerOk = isPlayerHandFound(card1, card2, findValue);
-	    dealerOk = dealerHand.getSecondCardRank() == showing && !dealerHand.isBlackjack();
-	    countOk = count == null ? true : shoe.getCount() == count;
+		if (found) {
+		    found = swap(showing, position + 3);
 
-	    // play out
-	    setStartingBet(BigDecimal.ZERO);
-	    setBankroll(BigDecimal.ZERO);
-	    setupBet(-100);
-	    playerAction(playerHands, dealerHand, shoe, AkaNanaSettings.MAX_HANDS);
-	    dealerAction(playerHands, otherPlayers, dealerHand, shoe);
+		    // set rollback point
+		    shoe.setRollback();
+		    shoe.getNextCard();
+		    shoe.getHiddenCardForDealer();
+		    shoe.getNextCard();
+		    shoe.getNextCard();
+
+		    if (count != null && count != shoe.getCount()) {
+			found = false;
+		    }
+		}
+	    }
 	}
+
+	// rollback
+	shoe.rollback();
+
+	// deal cards
+	playerHand.addCard(shoe.getNextCard());
+	dealerHand.addCard(shoe.getHiddenCardForDealer());
+	playerHand.addCard(shoe.getNextCard());
+	dealerHand.addCard(shoe.getNextCard());
+
+	// play out
+	setStartingBet(BigDecimal.ZERO);
+	setBankroll(BigDecimal.ZERO);
+	setupBet(-100);
+	playerAction(playerHands, dealerHand, shoe, AkaNanaSettings.MAX_HANDS);
+	dealerAction(playerHands, otherPlayers, dealerHand, shoe);
+    }
+
+    private boolean swap(int rank, int position) {
+	int i = shoe.getShoe().size() - 1;
+	int endPos = position + 4;
+	boolean success = false;
+
+	while (!success && i >= endPos) {
+	    Card card = shoe.getShoe().get(i);
+
+	    if (card.getValue() == rank) {
+		Collections.swap(shoe.getShoe(), i, position);
+		success = true;
+	    }
+
+	    i--;
+	}
+
+	return success;
     }
 
     // rollbackShoe
@@ -222,12 +223,13 @@ public class ActionSearch extends AbstractAkaNana implements Callable<AkaNanaMod
 	return dealerHand;
     }
 
-    public void setSettings(int card1, int card2, int showing, Integer count, AbstractShoe shoe,
+    public void setSettings(int card1, int card2, int showing, Integer count, int position, AbstractShoe shoe,
 	    StrategyUtil strategyUtil) {
 	this.card1 = card1;
 	this.card2 = card2;
 	this.showing = showing;
 	this.count = count;
+	this.position = position;
 	this.shoe = shoe;
 	this.strategyUtil = strategyUtil;
     }

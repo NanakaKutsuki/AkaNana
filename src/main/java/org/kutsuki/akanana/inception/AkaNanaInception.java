@@ -18,27 +18,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.kutsuki.akanana.action.Action;
-import org.kutsuki.akanana.driver.ActionSearch;
 import org.kutsuki.akanana.search.AkaNanaConfidence;
 import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
-import org.kutsuki.akanana.shoe.Card;
-import org.kutsuki.akanana.shoe.Hand;
 
 public class AkaNanaInception {
     private static final File OUTPUT_DIR = new File("output");
     private static final int ENDING_POSITION = 75;
 
+    private AkaNanaConfidence confidence;
     private ExecutorService es;
-    private int cores;
-    private long start;
 
     public AkaNanaInception() {
-	this.start = System.currentTimeMillis();
-	System.out.println(System.currentTimeMillis());
-	System.out.println(System.nanoTime());
-	this.cores = Runtime.getRuntime().availableProcessors();
-	this.es = Executors.newFixedThreadPool(cores);
+	this.confidence = new AkaNanaConfidence();
+	this.es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 	if (!OUTPUT_DIR.exists()) {
 	    OUTPUT_DIR.mkdir();
@@ -47,8 +40,37 @@ public class AkaNanaInception {
 
     public void run(int card1, int card2, int showingStart, int showingEnd, Integer count) {
 	List<AkaNanaModel> resultList = new ArrayList<AkaNanaModel>();
-	for (int showing = showingEnd; showing >= showingStart; showing--) {
-	    resultList.add(search(card1, card2, showing, count));
+	boolean splitAllowed = card1 == card2;
+
+	if (splitAllowed || card1 == 11 || card2 == 11) {
+
+	    for (int showing = showingEnd; showing >= showingStart; showing--) {
+		long start = System.currentTimeMillis();
+		AkaNanaModel result = search(card1, card2, showing, count);
+		result.setConfidence(confidence.getConfidence(splitAllowed));
+		resultList.add(result);
+		output(result, splitAllowed, System.currentTimeMillis() - start);
+		confidence.clear();
+	    }
+	} else {
+	    for (int showing = showingEnd; showing >= showingStart; showing--) {
+		long start = System.currentTimeMillis();
+		AkaNanaModel result = new AkaNanaModel();
+
+		for (int rank1 = 2; rank1 <= 10; rank1++) {
+		    for (int rank2 = rank1 + 1; rank2 <= 10; rank2++) {
+			if (rank1 + rank2 == card1 + card2) {
+			    AkaNanaModel model = search(card1, card2, showing, count);
+			    result.merge(model, splitAllowed);
+			}
+		    }
+		}
+
+		result.setConfidence(confidence.getConfidence(false));
+		resultList.add(result);
+		output(result, splitAllowed, System.currentTimeMillis() - start);
+		confidence.clear();
+	    }
 	}
 
 	// shutdown executor
@@ -58,9 +80,9 @@ public class AkaNanaInception {
     }
 
     private AkaNanaModel search(int card1, int card2, int showing, Integer count) {
-	boolean pair = card1 == card2;
-	String title = parseJobTitle(card1, card2, showing, count);
-	System.out.println("Running: " + title + " with: " + cores + " cores!");
+	boolean splitAllowed = card1 == card2;
+	String title = parseTitle(card1, card2, showing, count);
+	System.out.println("Running: " + title);
 
 	int startingPosition = 5;
 	if (count != null && count > 0) {
@@ -70,66 +92,45 @@ public class AkaNanaInception {
 	// generate input
 	List<Future<AkaNanaModel>> futureList = new ArrayList<>();
 	for (int position = startingPosition; position < ENDING_POSITION; position++) {
-	    Future<AkaNanaModel> f = es.submit(new ActionSearch(card1, card2, showing, count));
-	    futureList.add(f);
+	    for (int i = 0; i < 100000; i++) {
+		Future<AkaNanaModel> f = es.submit(new AkaNanaSearch(card1, card2, showing, count, position));
+		futureList.add(f);
+	    }
 	}
 
 	// map
 	AkaNanaModel result = new AkaNanaModel();
-	result.setJobTitle(title);
+	result.setTitle(title);
 
-	AkaNanaConfidence confidence = new AkaNanaConfidence(1);
-	for (int i = 0; i < futureList.size(); i++) {
+	for (Future<AkaNanaModel> future : futureList) {
 	    try {
 		// collect result
-		AkaNanaModel model = futureList.get(i).get();
-		confidence.add(model, i, pair);
+		AkaNanaModel model = future.get();
+		confidence.add(model);
 
 		// reduce result
-		result.merge(model, pair);
+		result.merge(model, splitAllowed);
 	    } catch (InterruptedException e) {
 		e.printStackTrace();
 	    } catch (ExecutionException e) {
 		e.printStackTrace();
 	    }
 	}
-	confidence.finish(pair);
 
-	// output
-	int confidenceResult = confidence.getConfidence(pair);
-	result.setConfidence(confidenceResult);
-	output(result, pair, confidenceResult, System.currentTimeMillis() - start);
 	return result;
     }
 
-    private String parseJobTitle(int card1, int card2, int showing, Integer count) {
+    private String parseTitle(int card1, int card2, int showing, Integer count) {
 	StringBuilder sb = new StringBuilder();
 
-	Card c1 = new Card(card1, 'x');
-	Card c2 = new Card(card2, 'x');
-
 	if (card1 == card2 || card1 == 11 || card2 == 11) {
-	    sb.append(c1.getRankString());
-	    sb.append(c2.getRankString());
+	    sb.append(cardToChar(card1));
+	    sb.append(cardToChar(card2));
 	} else {
-	    Hand hand = new Hand();
-	    hand.addCard(c1);
-	    hand.addCard(c2);
-	    sb.append(hand.getValue());
+	    sb.append(card1 + card2);
 	}
 	sb.append('v');
-
-	switch (showing) {
-	case 10:
-	    sb.append('T');
-	    break;
-	case 11:
-	    sb.append('A');
-	    break;
-	default:
-	    sb.append(showing);
-	    break;
-	}
+	sb.append(cardToChar(showing));
 
 	if (count != null) {
 	    sb.append("at");
@@ -139,10 +140,27 @@ public class AkaNanaInception {
 	return sb.toString();
     }
 
-    private void output(AkaNanaModel model, boolean pair, int confidence, long runtime) {
-	try (BufferedWriter bw = new BufferedWriter(
-		new FileWriter(new File(OUTPUT_DIR, model.getJobTitle() + ".txt")));) {
-	    String search = "\nSearch: " + model.getJobTitle() + " Confidence: " + confidence + Character.toString('%');
+    private char cardToChar(int value) {
+	char c;
+
+	switch (value) {
+	case 10:
+	    c = 'T';
+	    break;
+	case 11:
+	    c = 'A';
+	    break;
+	default:
+	    c = Character.forDigit(value, 10);
+	    break;
+	}
+
+	return c;
+    }
+
+    private void output(AkaNanaModel model, boolean splitAllowed, long runtime) {
+	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, model.getTitle() + ".txt")));) {
+	    String search = "\nSearch: " + model.getTitle() + " Confidence: " + model.getConfidence();
 	    System.out.println(search);
 	    bw.write(search);
 	    bw.newLine();
@@ -153,7 +171,7 @@ public class AkaNanaInception {
 	    treeMap.put(model.getStand(), Action.STAND);
 	    treeMap.put(model.getSurrender(), Action.SURRENDER);
 
-	    if (pair) {
+	    if (splitAllowed) {
 		treeMap.put(model.getSplit(), Action.SPLIT);
 	    }
 
@@ -164,7 +182,7 @@ public class AkaNanaInception {
 		bw.newLine();
 	    }
 
-	    String footer = "Runtime: " + AkaNanaSettings.formatTime(runtime) + ", Cores: " + cores;
+	    String footer = "Runtime: " + AkaNanaSettings.formatTime(runtime);
 	    System.out.println(footer);
 	    bw.write(footer);
 	    bw.newLine();
@@ -173,9 +191,10 @@ public class AkaNanaInception {
 	}
     }
 
-    private void outputCsv(List<AkaNanaModel> resultList, boolean pair) {
+    private void outputCsv(List<AkaNanaModel> resultList, boolean splitAllowed) {
+	// TODO redo csv name
 	try (BufferedWriter bw = new BufferedWriter(
-		new FileWriter(new File(OUTPUT_DIR, resultList.get(0).getJobTitle() + ".csv")));) {
+		new FileWriter(new File(OUTPUT_DIR, resultList.get(0).getTitle() + ".csv")));) {
 	    StringBuilder sb = new StringBuilder();
 	    sb.append("Case").append(',');
 	    sb.append("Stand").append(',');
@@ -190,13 +209,13 @@ public class AkaNanaInception {
 
 	    for (AkaNanaModel result : resultList) {
 		sb = new StringBuilder();
-		sb.append(result.getJobTitle()).append(',');
+		sb.append(result.getTitle()).append(',');
 		sb.append(result.getStand().setScale(0, RoundingMode.HALF_UP)).append(',');
 		sb.append(result.getHit().setScale(0, RoundingMode.HALF_UP)).append(',');
 		sb.append(result.getDoubleDown().setScale(0, RoundingMode.HALF_UP)).append(',');
 		sb.append(result.getSurrender().setScale(0, RoundingMode.HALF_UP)).append(',');
 
-		if (pair) {
+		if (splitAllowed) {
 		    sb.append(result.getSplit().setScale(0, RoundingMode.HALF_UP));
 		}
 

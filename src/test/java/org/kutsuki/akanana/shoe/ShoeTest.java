@@ -18,7 +18,7 @@ public class ShoeTest {
 	    count = 0;
 
 	    for (Card card : shoe.getShoe()) {
-		if (card.getRank() == rank) {
+		if (card.getValue() == rank) {
 		    count++;
 		}
 	    }
@@ -29,7 +29,7 @@ public class ShoeTest {
 	// check for rank 10s
 	count = 0;
 	for (Card card : shoe.getShoe()) {
-	    if (card.getRank() == 10) {
+	    if (card.getValue() == 10) {
 		count++;
 	    }
 	}
@@ -38,7 +38,7 @@ public class ShoeTest {
 	// check for Aces
 	count = 0;
 	for (Card card : shoe.getShoe()) {
-	    if (card.getRank() == 11) {
+	    if (card.getValue() == 11) {
 		count++;
 	    }
 	}
@@ -61,7 +61,7 @@ public class ShoeTest {
     @Test
     public void checkAllCardsAgain() {
 	// reshuffle
-	shoe.reshuffle();
+	shoe.checkReshuffle(true);
 
 	// check all the cards again
 	for (int i = 1; i < (decks * 52) - 4; i += 4) {
@@ -86,12 +86,12 @@ public class ShoeTest {
     @Test
     public void testSetupShoe() {
 	AbstractShoe fakeShoe = new AkaNanaShoe(decks, playable, 4, 5, 6);
-	assertEquals("Wrong Card", 4, fakeShoe.getNextCard().getRank());
-	assertEquals("Wrong Card", 5, fakeShoe.getNextCard().getRank());
-	assertEquals("Wrong Card", 6, fakeShoe.getNextCard().getRank());
+	assertEquals("Wrong Card", 4, fakeShoe.getNextCard().getValue());
+	assertEquals("Wrong Card", 5, fakeShoe.getNextCard().getValue());
+	assertEquals("Wrong Card", 6, fakeShoe.getNextCard().getValue());
 
 	for (int i = 3; i < decks * 52; i++) {
-	    assertEquals("Wrong Card", 10, fakeShoe.getNextCard().getRank());
+	    assertEquals("Wrong Card", 10, fakeShoe.getNextCard().getValue());
 	}
     }
 
@@ -103,7 +103,7 @@ public class ShoeTest {
 	Card expectedCard4 = null;
 	int expectedCount = 0;
 
-	shoe.reshuffle();
+	shoe.checkReshuffle(true);
 
 	for (int i = 0; i < 10; i++) {
 	    shoe.setRollback();

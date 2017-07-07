@@ -1,23 +1,34 @@
 package org.kutsuki.akanana.shoe;
 
-import java.io.Serializable;
-
-public class Card implements Serializable {
-    private static final long serialVersionUID = -8231436994772856118L;
-
-    public static final char TEN = 'T';
-    public static final char JACK = 'J';
-    public static final char QUEEN = 'Q';
-    public static final char KING = 'K';
-    public static final char ACE = 'A';
+public class Card {
+    private static final char TEN = 'T';
+    private static final char JACK = 'J';
+    private static final char QUEEN = 'Q';
+    private static final char KING = 'K';
+    private static final char ACE = 'A';
 
     private int rank;
+    private int value;
     private char suit;
 
     // Constructor
     public Card(int rank, char suit) {
 	this.rank = rank;
 	this.suit = suit;
+
+	switch (rank) {
+	case 11:
+	case 12:
+	case 13:
+	    this.value = 10;
+	    break;
+	case 14:
+	    this.value = 11;
+	    break;
+	default:
+	    this.value = rank;
+	    break;
+	}
     }
 
     // toString
@@ -50,36 +61,9 @@ public class Card implements Serializable {
 	return sb.toString();
     }
 
-    // getRank
-    public int getRank() {
-	int r = rank;
-
-	if (rank >= 10 && rank < 14) {
-	    r = 10;
-	} else if (rank == 14) {
-	    r = 11;
-	}
-
-	return r;
-    }
-
-    // getRankChar
-    public String getRankString() {
-	StringBuilder sb = new StringBuilder();
-
-	switch (rank) {
-	case 10:
-	    sb.append(TEN);
-	    break;
-	case 11:
-	    sb.append(ACE);
-	    break;
-	default:
-	    sb.append(rank);
-	    break;
-	}
-
-	return sb.toString();
+    // getValue
+    public int getValue() {
+	return value;
     }
 
     // getSuit

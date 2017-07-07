@@ -9,6 +9,7 @@ public final class AkaNanaSettings {
     public static final int DECKS = 2;
     public static final int MAX_HANDS = 4;
 
+    public static final int TRIALS = 1000000;
     public static final int PLAYABLE = 80;
 
     public static final BigDecimal SIXTY = new BigDecimal(60);

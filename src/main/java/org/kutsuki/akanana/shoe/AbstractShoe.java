@@ -110,11 +110,11 @@ public abstract class AbstractShoe {
     }
 
     // reshuffle
-    public boolean reshuffle() {
+    public boolean checkReshuffle(boolean reshuffle) {
 	boolean reshuffled = false;
 
-	// avg games for 2 deck 0 and other players is 9.95
-	if (index > playable) {
+	// avg games for 2 deck 80 and other players is 9.95
+	if (index > playable || reshuffle) {
 	    Collections.shuffle(shoe, random);
 	    index = 0;
 	    rollback = 0;

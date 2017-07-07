@@ -57,11 +57,11 @@ public class Hand {
 	value = 0;
 
 	for (Card c : hand) {
-	    if (c.getRank() == 11) {
+	    if (c.getValue() == 11) {
 		aces++;
 	    }
 
-	    value += c.getRank();
+	    value += c.getValue();
 	}
 
 	for (int i = 0; i < aces; i++) {
@@ -94,7 +94,7 @@ public class Hand {
 
     // getFirstCardRank
     public int getFirstCardRank() {
-	return hand.get(0).getRank();
+	return hand.get(0).getValue();
     }
 
     // getHand
@@ -104,7 +104,7 @@ public class Hand {
 
     // getSecondCardRank
     public int getSecondCardRank() {
-	return hand.get(1).getRank();
+	return hand.get(1).getValue();
     }
 
     // getSoft

@@ -5,7 +5,7 @@ public class AkaNanaShoe extends AbstractShoe {
     public AkaNanaShoe(int decks, int playable) {
 	super(decks, playable);
 	setCount(getDecks() * -2);
-	reshuffle();
+	checkReshuffle(true);
     }
 
     // Constructor
@@ -23,11 +23,11 @@ public class AkaNanaShoe extends AbstractShoe {
     }
 
     public void count(Card card) {
-	if (card.getRank() <= 6) {
+	if (card.getValue() <= 6) {
 	    addCount();
-	} else if (card.getRank() >= 10) {
+	} else if (card.getValue() >= 10) {
 	    subtractCount();
-	} else if (card.getRank() == 7 && (card.getSuit() == 'd' || card.getSuit() == 'h')) {
+	} else if (card.getValue() == 7 && (card.getSuit() == 'd' || card.getSuit() == 'h')) {
 	    addCount();
 	}
     }
@@ -37,11 +37,11 @@ public class AkaNanaShoe extends AbstractShoe {
     public Card getHiddenCardForDealer() {
 	Card card = getCard();
 
-	if (card.getRank() <= 6) {
+	if (card.getValue() <= 6) {
 	    setHiddenPoint(1);
-	} else if (card.getRank() >= 10) {
+	} else if (card.getValue() >= 10) {
 	    setHiddenPoint(-1);
-	} else if (card.getRank() == 7 && (card.getSuit() == 'd' || card.getSuit() == 'h')) {
+	} else if (card.getValue() == 7 && (card.getSuit() == 'd' || card.getSuit() == 'h')) {
 	    setHiddenPoint(1);
 	}
 
@@ -50,8 +50,8 @@ public class AkaNanaShoe extends AbstractShoe {
 
     // reshuffle
     @Override
-    public boolean reshuffle() {
-	boolean reshuffled = super.reshuffle();
+    public boolean checkReshuffle(boolean reshuffle) {
+	boolean reshuffled = super.checkReshuffle(reshuffle);
 
 	if (reshuffled) {
 	    // assume we don't count the burn card

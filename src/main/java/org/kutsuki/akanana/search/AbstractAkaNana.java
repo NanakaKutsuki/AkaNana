@@ -44,7 +44,7 @@ public abstract class AbstractAkaNana {
 	dealerHand.clear();
 
 	// check for reshuffle
-	shoe.reshuffle();
+	shoe.checkReshuffle(false);
 
 	// set starting count
 	startingCount = shoe.getCount();
