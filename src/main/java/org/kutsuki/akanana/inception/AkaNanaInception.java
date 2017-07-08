@@ -28,10 +28,15 @@ public class AkaNanaInception {
 
     private AkaNanaConfidence confidence;
     private ExecutorService es;
+    private AkaNanaStatus status;
 
     public AkaNanaInception() {
 	this.confidence = new AkaNanaConfidence();
 	this.es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+	// execute status timer
+	this.status = new AkaNanaStatus();
+	// this.es.execute(status);
 
 	if (!OUTPUT_DIR.exists()) {
 	    OUTPUT_DIR.mkdir();
@@ -40,10 +45,10 @@ public class AkaNanaInception {
 
     public void run(int card1, int card2, int showingStart, int showingEnd, Integer count) {
 	List<AkaNanaModel> resultList = new ArrayList<AkaNanaModel>();
+
 	boolean splitAllowed = card1 == card2;
 
 	if (splitAllowed || card1 == 11 || card2 == 11) {
-
 	    for (int showing = showingEnd; showing >= showingStart; showing--) {
 		long start = System.currentTimeMillis();
 		AkaNanaModel result = search(card1, card2, showing, count);
@@ -60,7 +65,7 @@ public class AkaNanaInception {
 		for (int rank1 = 2; rank1 <= 10; rank1++) {
 		    for (int rank2 = rank1 + 1; rank2 <= 10; rank2++) {
 			if (rank1 + rank2 == card1 + card2) {
-			    AkaNanaModel model = search(card1, card2, showing, count);
+			    AkaNanaModel model = search(rank1, rank2, showing, count);
 			    result.merge(model, splitAllowed);
 			}
 		    }
@@ -74,6 +79,7 @@ public class AkaNanaInception {
 	}
 
 	// shutdown executor
+	status.shutdown();
 	es.shutdown();
 
 	outputCsv(resultList, card1 == card2);
@@ -82,7 +88,7 @@ public class AkaNanaInception {
     private AkaNanaModel search(int card1, int card2, int showing, Integer count) {
 	boolean splitAllowed = card1 == card2;
 	String title = parseTitle(card1, card2, showing, count);
-	System.out.println("Running: " + title);
+	System.out.println("Running: " + title + " (" + cardToString(card1) + cardToString(card2) + ')');
 
 	int startingPosition = 5;
 	if (count != null && count > 0) {
@@ -93,11 +99,12 @@ public class AkaNanaInception {
 	// generate input
 	List<Future<AkaNanaModel>> futureList = new ArrayList<>();
 	for (int position = startingPosition; position < ENDING_POSITION; position++) {
-	    for (int i = 0; i < 100000; i++) {
+	    for (int i = 0; i < 10000; i++) {
 		Future<AkaNanaModel> f = es.submit(new AkaNanaSearch(card1, card2, showing, count, position));
 		futureList.add(f);
 	    }
 	}
+	status.setFutureList(futureList);
 
 	// map
 	AkaNanaModel result = new AkaNanaModel();
@@ -125,43 +132,43 @@ public class AkaNanaInception {
 	StringBuilder sb = new StringBuilder();
 
 	if (card1 == card2 || card1 == 11 || card2 == 11) {
-	    sb.append(cardToChar(card1));
-	    sb.append(cardToChar(card2));
+	    sb.append(cardToString(card1));
+	    sb.append(cardToString(card2));
 	} else {
 	    sb.append(card1 + card2);
 	}
 	sb.append('v');
-	sb.append(cardToChar(showing));
+	sb.append(cardToString(showing));
 
 	if (count != null) {
-	    sb.append("at");
+	    sb.append('@');
 	    sb.append(count);
 	}
 
 	return sb.toString();
     }
 
-    private char cardToChar(int value) {
-	char c;
+    private String cardToString(int value) {
+	String s;
 
 	switch (value) {
 	case 10:
-	    c = 'T';
+	    s = Character.toString('T');
 	    break;
 	case 11:
-	    c = 'A';
+	    s = Character.toString('A');
 	    break;
 	default:
-	    c = Character.forDigit(value, 10);
+	    s = Integer.toString(value);
 	    break;
 	}
 
-	return c;
+	return s;
     }
 
     private void output(AkaNanaModel model, boolean splitAllowed, long runtime) {
 	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, model.getTitle() + ".txt")));) {
-	    String search = "\nSearch: " + model.getTitle() + " Confidence: " + model.getConfidence();
+	    String search = "Search: " + model.getTitle() + " Confidence: " + model.getConfidence();
 	    System.out.println(search);
 	    bw.write(search);
 	    bw.newLine();
@@ -272,6 +279,7 @@ public class AkaNanaInception {
 		count = null;
 	    }
 	}
+
 	AkaNanaInception inception = new AkaNanaInception();
 	inception.run(card1, card2, showingStart, showingEnd, count);
     }

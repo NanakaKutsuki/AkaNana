@@ -26,7 +26,11 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 
     // constructor
     public AkaNanaSearch(int card1, int card2, int showing, Integer count, int position) {
-	setSettings(card1, card2, showing, count, position);
+	this.card1 = card1;
+	this.card2 = card2;
+	this.showing = showing;
+	this.count = count;
+	this.position = position;
     }
 
     @Override
@@ -95,6 +99,8 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	}
 	Hand playerHand = getPlayerHands().get(0);
 
+	Card p1, p2, d1, d2 = null;
+
 	boolean found = false;
 	while (!found) {
 	    playerHand.clear();
@@ -116,12 +122,13 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 
 		    // set rollback point
 		    getShoe().setRollback();
-		    getShoe().getNextCard();
-		    getShoe().getHiddenCardForDealer();
-		    getShoe().getNextCard();
-		    getShoe().getNextCard();
+		    p1 = getShoe().getNextCard();
+		    d1 = getShoe().getHiddenCardForDealer();
+		    p2 = getShoe().getNextCard();
+		    d2 = getShoe().getNextCard();
 
-		    if (count != null && count != getShoe().getCount()) {
+		    if (isBlackjack(p1, p2) || isBlackjack(d1, d2)
+			    || (count != null && count != getShoe().getCount())) {
 			found = false;
 		    }
 		}
@@ -136,6 +143,10 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	getDealerHand().addCard(getShoe().getHiddenCardForDealer());
 	playerHand.addCard(getShoe().getNextCard());
 	getDealerHand().addCard(getShoe().getNextCard());
+    }
+
+    private boolean isBlackjack(Card card1, Card card2) {
+	return (card1.getValue() == 11 && card2.getValue() == 10) || (card1.getValue() == 10 && card2.getValue() == 11);
     }
 
     private boolean swap(int rank, int position) {
@@ -181,13 +192,5 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 
     public void setStrategy(StrategyUtil strategyUtil) {
 	this.strategyUtil = strategyUtil;
-    }
-
-    public void setSettings(int card1, int card2, int showing, Integer count, int position) {
-	this.card1 = card1;
-	this.card2 = card2;
-	this.showing = showing;
-	this.count = count;
-	this.position = position;
     }
 }

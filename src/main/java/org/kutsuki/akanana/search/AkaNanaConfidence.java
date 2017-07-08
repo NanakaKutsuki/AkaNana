@@ -26,6 +26,7 @@ public class AkaNanaConfidence {
     }
 
     public void clear() {
+	this.confidenceMap.clear();
 	this.modelList.clear();
     }
 

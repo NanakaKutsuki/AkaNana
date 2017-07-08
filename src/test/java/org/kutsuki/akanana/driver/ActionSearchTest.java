@@ -28,7 +28,9 @@ public class ActionSearchTest {
 	for (int card1 = 2; card1 <= 11; card1++) {
 	    for (int card2 = 2; card2 <= 11; card2++) {
 		for (int showing = 2; showing <= 11; showing++) {
-		    testFindShoeByValue(shoe, card1, card2, showing, null);
+		    if (!isBlackjack(card1, card2)) {
+			testFindShoeByValue(shoe, card1, card2, showing, null);
+		    }
 		}
 	    }
 	}
@@ -42,7 +44,9 @@ public class ActionSearchTest {
 	    for (int card2 = 2; card2 <= 11; card2++) {
 		for (int showing = 2; showing <= 11; showing++) {
 		    if (card1 == card2 || card1 == 11 || card2 == 11) {
-			testFindShoeByCards(shoe, card1, card2, showing, null);
+			if (!isBlackjack(card1, card2)) {
+			    testFindShoeByCards(shoe, card1, card2, showing, null);
+			}
 		    }
 		}
 	    }
@@ -54,8 +58,12 @@ public class ActionSearchTest {
 	AkaNanaShoe shoe = new AkaNanaShoe(DECKS, PLAYABLE);
 
 	for (int card1 = 2; card1 <= 11; card1++) {
-	    for (int showing = 2; showing <= 11; showing++) {
-		testFindShoeByValue(shoe, card1, 10, showing, DECKS * -2);
+	    for (int card2 = 2; card2 <= 11; card2++) {
+		for (int showing = 2; showing <= 11; showing++) {
+		    if (!isBlackjack(card1, card2)) {
+			testFindShoeByValue(shoe, card1, card2, showing, DECKS * -2);
+		    }
+		}
 	    }
 	}
     }
@@ -65,8 +73,12 @@ public class ActionSearchTest {
 	AkaNanaShoe shoe = new AkaNanaShoe(DECKS, PLAYABLE);
 
 	for (int card1 = 2; card1 <= 11; card1++) {
-	    for (int showing = 2; showing <= 11; showing++) {
-		testFindShoeByCards(shoe, card1, 11, showing, DECKS * -2);
+	    for (int card2 = 2; card2 <= 11; card2++) {
+		for (int showing = 2; showing <= 11; showing++) {
+		    if (!isBlackjack(card1, card2)) {
+			testFindShoeByCards(shoe, card1, 2, showing, DECKS * -2);
+		    }
+		}
 	    }
 	}
     }
@@ -296,36 +308,38 @@ public class ActionSearchTest {
 	for (int rank1 = 4; rank1 <= 11; rank1++) {
 	    for (int rank2 = rank1 + 1; rank2 <= 11; rank2++) {
 		for (int showing = 2; showing <= 11; showing++) {
-		    AkaNanaSearch as = new AkaNanaSearch(rank1, rank2, showing, null, POSITION);
-		    as.setStartingBet(BET);
-		    as.setShoe(new AkaNanaShoe(DECKS, PLAYABLE));
-		    as.setStrategy(BASIC);
+		    if (!isBlackjack(rank1, rank2)) {
+			AkaNanaSearch as = new AkaNanaSearch(rank1, rank2, showing, null, POSITION);
+			as.setStartingBet(BET);
+			as.setShoe(new AkaNanaShoe(DECKS, PLAYABLE));
+			as.setStrategy(BASIC);
 
-		    as.setBankroll(BigDecimal.ZERO);
-		    as.makeBet(BigDecimal.ONE);
-		    as.searchShoe();
-		    as.rollbackShoe();
-		    as.playerAction(Action.STAND);
+			as.setBankroll(BigDecimal.ZERO);
+			as.makeBet(BigDecimal.ONE);
+			as.searchShoe();
+			as.rollbackShoe();
+			as.playerAction(Action.STAND);
 
-		    expectedCard1 = as.getPlayerHands().get(0).getHand().get(0);
-		    expectedCard2 = as.getDealerHand().getHand().get(0);
-		    expectedCard3 = as.getPlayerHands().get(0).getHand().get(1);
-		    expectedCard4 = as.getDealerHand().getHand().get(1);
-		    expectedValue = as.getPlayerHands().get(0).getValue();
-		    expectedBankroll = as.getBankroll();
+			expectedCard1 = as.getPlayerHands().get(0).getHand().get(0);
+			expectedCard2 = as.getDealerHand().getHand().get(0);
+			expectedCard3 = as.getPlayerHands().get(0).getHand().get(1);
+			expectedCard4 = as.getDealerHand().getHand().get(1);
+			expectedValue = as.getPlayerHands().get(0).getValue();
+			expectedBankroll = as.getBankroll();
 
-		    as.setBankroll(BigDecimal.ZERO);
-		    as.makeBet(BigDecimal.ONE);
-		    as.rollbackShoe();
-		    as.playerAction(Action.STAND);
+			as.setBankroll(BigDecimal.ZERO);
+			as.makeBet(BigDecimal.ONE);
+			as.rollbackShoe();
+			as.playerAction(Action.STAND);
 
-		    assertEquals("Wrong Card", expectedCard1, as.getPlayerHands().get(0).getHand().get(0));
-		    assertEquals("Wrong Card", expectedCard2, as.getDealerHand().getHand().get(0));
-		    assertEquals("Wrong Card", expectedCard3, as.getPlayerHands().get(0).getHand().get(1));
-		    assertEquals("Wrong Card", expectedCard4, as.getDealerHand().getHand().get(1));
-		    assertEquals("Wrong Hand Value", expectedValue, as.getPlayerHands().get(0).getValue());
-		    assertEquals("Wrong Dealer Showing", showing, as.getDealerHand().showingValue());
-		    assertEquals("Wrong Payout", expectedBankroll, as.getBankroll());
+			assertEquals("Wrong Card", expectedCard1, as.getPlayerHands().get(0).getHand().get(0));
+			assertEquals("Wrong Card", expectedCard2, as.getDealerHand().getHand().get(0));
+			assertEquals("Wrong Card", expectedCard3, as.getPlayerHands().get(0).getHand().get(1));
+			assertEquals("Wrong Card", expectedCard4, as.getDealerHand().getHand().get(1));
+			assertEquals("Wrong Hand Value", expectedValue, as.getPlayerHands().get(0).getValue());
+			assertEquals("Wrong Dealer Showing", showing, as.getDealerHand().showingValue());
+			assertEquals("Wrong Payout", expectedBankroll, as.getBankroll());
+		    }
 		}
 	    }
 	}
@@ -394,5 +408,9 @@ public class ActionSearchTest {
 	assertEquals("Wrong Insurance " + hand, expectedInsurance, hand.isInsurance());
 	assertEquals("Wrong Split " + hand, expectedSplit, hand.isSplit());
 	assertEquals("Wrong Surrender " + hand, expectedSurrender, hand.isSurrender());
+    }
+
+    private boolean isBlackjack(int rank1, int rank2) {
+	return (rank1 == 11 && rank2 == 10) || (rank1 == 10 && rank2 == 11);
     }
 }
