@@ -29,14 +29,19 @@ public class AkaNanaInception {
     private AkaNanaConfidence confidence;
     private ExecutorService es;
     private AkaNanaStatus status;
+    private int trials;
 
-    public AkaNanaInception() {
+    public AkaNanaInception(int trials) {
 	this.confidence = new AkaNanaConfidence();
 	this.es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	this.trials = trials;
 
 	// execute status timer
 	this.status = new AkaNanaStatus();
-	// this.es.execute(status);
+
+	if (trials >= 100000) {
+	    this.es.execute(status);
+	}
 
 	if (!OUTPUT_DIR.exists()) {
 	    OUTPUT_DIR.mkdir();
@@ -97,9 +102,9 @@ public class AkaNanaInception {
 	}
 
 	// generate input
-	List<Future<AkaNanaModel>> futureList = new ArrayList<>();
+	List<Future<AkaNanaModel>> futureList = new ArrayList<>(trials * (ENDING_POSITION - startingPosition));
 	for (int position = startingPosition; position < ENDING_POSITION; position++) {
-	    for (int i = 0; i < 10000; i++) {
+	    for (int i = 0; i < trials; i++) {
 		Future<AkaNanaModel> f = es.submit(new AkaNanaSearch(card1, card2, showing, count, position));
 		futureList.add(f);
 	    }
@@ -210,7 +215,8 @@ public class AkaNanaInception {
 	    sb.append("DoubleDown").append(',');
 	    sb.append("Surrender").append(',');
 	    sb.append("Split").append(',');
-	    sb.append("Confidence");
+	    sb.append("Confidence").append(',');
+	    sb.append("Suggestion");
 	    System.out.println(sb.toString());
 	    bw.write(sb.toString());
 	    bw.newLine();
@@ -228,6 +234,7 @@ public class AkaNanaInception {
 		}
 
 		sb.append(',').append(result.getConfidence());
+		sb.append(',').append(result.getTopAction(splitAllowed));
 
 		System.out.println(sb.toString());
 		bw.write(sb.toString());
@@ -239,8 +246,8 @@ public class AkaNanaInception {
     }
 
     public static void main(String[] args) {
-	if (args.length != 3 && args.length != 4) {
-	    throw new IllegalArgumentException("card1, card2, showing, count");
+	if (args.length != 3 && args.length != 4 && args.length != 5) {
+	    throw new IllegalArgumentException("card1, card2, showing, count, trials");
 	}
 
 	int card1 = 0;
@@ -248,6 +255,7 @@ public class AkaNanaInception {
 	int showingStart = 2;
 	int showingEnd = 11;
 	Integer count = null;
+	int trials = 10000;
 
 	try {
 	    card1 = Integer.parseInt(args[0]);
@@ -280,7 +288,15 @@ public class AkaNanaInception {
 	    }
 	}
 
-	AkaNanaInception inception = new AkaNanaInception();
+	if (args.length == 5) {
+	    try {
+		trials = Integer.parseInt(args[4]);
+	    } catch (NumberFormatException e) {
+		// do nothing
+	    }
+	}
+
+	AkaNanaInception inception = new AkaNanaInception(trials);
 	inception.run(card1, card2, showingStart, showingEnd, count);
     }
 }

@@ -31,7 +31,6 @@ public class AkaNanaModel {
 	treeMap.put(getDoubleDown(), Action.DOUBLE_DOWN);
 	treeMap.put(getHit(), Action.HIT);
 	treeMap.put(getStand(), Action.STAND);
-	treeMap.put(getStand(), Action.SURRENDER);
 
 	if (splitAllowed) {
 	    treeMap.put(getSplit(), Action.SPLIT);

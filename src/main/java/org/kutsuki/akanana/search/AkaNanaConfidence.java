@@ -15,10 +15,12 @@ import org.kutsuki.akanana.action.Action;
 public class AkaNanaConfidence {
     private List<AkaNanaModel> modelList;
     private Map<Action, Integer> confidenceMap;
+    private Action action;
 
     public AkaNanaConfidence() {
 	this.confidenceMap = new HashMap<>();
 	this.modelList = new ArrayList<>();
+	this.action = null;
     }
 
     public void add(AkaNanaModel model) {
@@ -28,6 +30,7 @@ public class AkaNanaConfidence {
     public void clear() {
 	this.confidenceMap.clear();
 	this.modelList.clear();
+	this.action = null;
     }
 
     public int getConfidence(boolean splitAllowed) {
@@ -51,7 +54,12 @@ public class AkaNanaConfidence {
 	    treeMap.put(entry.getValue(), entry.getKey());
 	}
 
+	this.action = treeMap.firstEntry().getValue();
 	return treeMap.firstKey();
+    }
+
+    public Action getAction() {
+	return action;
     }
 
     private void addResult(AkaNanaModel result, boolean splitAllowed) {

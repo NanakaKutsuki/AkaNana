@@ -10,7 +10,7 @@ import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 
 public class AkaNanaStatus extends Thread {
-    private static final long PERIOD = 10 * 1000;
+    private static final long PERIOD = 60 * 1000;
 
     private boolean shutdown;
     private List<Future<AkaNanaModel>> futureList;
