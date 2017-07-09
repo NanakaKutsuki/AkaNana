@@ -12,7 +12,7 @@ public class Hand {
     public Hand() {
 	this.bust = false;
 	this.doubleDown = false;
-	this.hand = new ArrayList<Card>();
+	this.hand = new ArrayList<>();
 	this.insurance = false;
 	this.soft = 0;
 	this.split = false;
@@ -23,7 +23,7 @@ public class Hand {
     // copy constructor
     public Hand(Hand hand) {
 	this.doubleDown = false;
-	this.hand = new ArrayList<Card>();
+	this.hand = new ArrayList<>();
 	this.insurance = false;
 	this.split = false;
 	this.surrender = false;
@@ -36,7 +36,7 @@ public class Hand {
     // copy constructor
     public Hand(Hand hand, int numCards) {
 	this.doubleDown = false;
-	this.hand = new ArrayList<Card>();
+	this.hand = new ArrayList<>();
 	this.insurance = false;
 	this.split = false;
 	this.surrender = false;

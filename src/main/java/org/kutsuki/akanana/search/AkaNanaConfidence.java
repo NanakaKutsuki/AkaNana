@@ -17,9 +17,9 @@ public class AkaNanaConfidence {
     private Map<Action, Integer> confidenceMap;
     private Action action;
 
-    public AkaNanaConfidence() {
+    public AkaNanaConfidence(int capacity) {
 	this.confidenceMap = new HashMap<>();
-	this.modelList = new ArrayList<>();
+	this.modelList = new ArrayList<>(capacity);
 	this.action = null;
     }
 

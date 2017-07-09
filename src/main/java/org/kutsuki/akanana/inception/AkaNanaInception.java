@@ -29,10 +29,14 @@ public class AkaNanaInception {
     private AkaNanaConfidence confidence;
     private ExecutorService es;
     private AkaNanaStatus status;
+    private int capacity;
+    private int startingPosition;
     private int trials;
 
     public AkaNanaInception(int trials) {
-	this.confidence = new AkaNanaConfidence();
+	this.startingPosition = 5;
+	this.capacity = trials * (ENDING_POSITION - startingPosition);
+	this.confidence = new AkaNanaConfidence(capacity);
 	this.es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	this.trials = trials;
 
@@ -49,7 +53,7 @@ public class AkaNanaInception {
     }
 
     public void run(int card1, int card2, int showingStart, int showingEnd, Integer count) {
-	List<AkaNanaModel> resultList = new ArrayList<AkaNanaModel>();
+	List<AkaNanaModel> resultList = new ArrayList<>();
 
 	boolean splitAllowed = card1 == card2;
 
@@ -76,7 +80,7 @@ public class AkaNanaInception {
 		    }
 		}
 
-		result.setConfidence(confidence.getConfidence(false));
+		result.setConfidence(confidence.getConfidence(splitAllowed));
 		resultList.add(result);
 		output(result, splitAllowed, System.currentTimeMillis() - start);
 		confidence.clear();
@@ -95,14 +99,12 @@ public class AkaNanaInception {
 	String title = parseTitle(card1, card2, showing, count);
 	System.out.println("Running: " + title + " (" + cardToString(card1) + cardToString(card2) + ')');
 
-	int startingPosition = 5;
 	if (count != null && count > 0) {
-	    startingPosition = 5;
 	    startingPosition += count;
 	}
 
 	// generate input
-	List<Future<AkaNanaModel>> futureList = new ArrayList<>(trials * (ENDING_POSITION - startingPosition));
+	List<Future<AkaNanaModel>> futureList = new ArrayList<>(capacity);
 	for (int position = startingPosition; position < ENDING_POSITION; position++) {
 	    for (int i = 0; i < trials; i++) {
 		Future<AkaNanaModel> f = es.submit(new AkaNanaSearch(card1, card2, showing, count, position));

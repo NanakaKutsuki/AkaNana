@@ -32,7 +32,7 @@ public abstract class AbstractShoe {
 	this.index = playable + 1;
 	this.rollback = 0;
 	this.count = 0;
-	this.shoe = new ArrayList<Card>();
+	this.shoe = new ArrayList<>();
 
 	for (int i = 0; i < decks; i++) {
 	    for (int j = 2; j < 15; j++) {
@@ -57,7 +57,7 @@ public abstract class AbstractShoe {
 	this.index = 0;
 	this.rollback = 0;
 	this.count = 0;
-	this.shoe = new ArrayList<Card>();
+	this.shoe = new ArrayList<>();
 
 	for (int i = 0; i < c.length; i++) {
 	    Card card = new Card(c[i], 'c');

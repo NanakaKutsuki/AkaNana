@@ -30,10 +30,10 @@ public abstract class AbstractAkaNana {
     public AbstractAkaNana() {
 	this.dealerHand = new Hand();
 	this.optimal = false;
-	this.otherPlayers = new ArrayList<List<Hand>>();
-	this.playerHands = new ArrayList<Hand>();
+	this.otherPlayers = new ArrayList<>();
+	this.playerHands = new ArrayList<>();
 
-	this.playerHands = new ArrayList<Hand>();
+	this.playerHands = new ArrayList<>();
 	for (int i = 0; i < AkaNanaSettings.MAX_HANDS; i++) {
 	    playerHands.add(new Hand());
 	}
