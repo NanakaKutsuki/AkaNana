@@ -282,7 +282,7 @@ public class AkaNanaInception {
 	    throw new IllegalArgumentException("Not an Integer!", e);
 	}
 
-	if (args.length == 4) {
+	if (args.length >= 4) {
 	    try {
 		count = Integer.parseInt(args[3]);
 	    } catch (NumberFormatException e) {
