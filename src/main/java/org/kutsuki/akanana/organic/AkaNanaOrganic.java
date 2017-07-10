@@ -1,4 +1,4 @@
-package org.kutsuki.akanana.inception;
+package org.kutsuki.akanana.organic;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,21 +23,16 @@ import org.kutsuki.akanana.search.AkaNanaModel;
 import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.search.AkaNanaStatus;
 
-public class AkaNanaInception {
+public class AkaNanaOrganic {
     private static final File OUTPUT_DIR = new File("output");
-    private static final int ENDING_POSITION = 75;
 
     private AkaNanaConfidence confidence;
     private ExecutorService es;
     private AkaNanaStatus status;
-    private int capacity;
-    private int startingPosition;
     private int trials;
 
-    public AkaNanaInception(int trials) {
-	this.startingPosition = 5;
-	this.capacity = trials * (ENDING_POSITION - startingPosition);
-	this.confidence = new AkaNanaConfidence(capacity);
+    public AkaNanaOrganic(int trials) {
+	this.confidence = new AkaNanaConfidence(trials);
 	this.es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	this.trials = trials;
 
@@ -58,34 +53,13 @@ public class AkaNanaInception {
 
 	boolean splitAllowed = card1 == card2;
 
-	if (splitAllowed || card1 == 11 || card2 == 11) {
-	    for (int showing = showingEnd; showing >= showingStart; showing--) {
-		long start = System.currentTimeMillis();
-		AkaNanaModel result = search(card1, card2, showing, count);
-		result.setConfidence(confidence.getConfidence(splitAllowed));
-		resultList.add(result);
-		output(result, splitAllowed, System.currentTimeMillis() - start);
-		confidence.clear();
-	    }
-	} else {
-	    for (int showing = showingEnd; showing >= showingStart; showing--) {
-		long start = System.currentTimeMillis();
-		AkaNanaModel result = new AkaNanaModel();
-
-		for (int rank1 = 2; rank1 <= 10; rank1++) {
-		    for (int rank2 = rank1 + 1; rank2 <= 10; rank2++) {
-			if (rank1 + rank2 == card1 + card2) {
-			    AkaNanaModel model = search(rank1, rank2, showing, count);
-			    result.merge(model, splitAllowed);
-			}
-		    }
-		}
-
-		result.setConfidence(confidence.getConfidence(splitAllowed));
-		resultList.add(result);
-		output(result, splitAllowed, System.currentTimeMillis() - start);
-		confidence.clear();
-	    }
+	for (int showing = showingEnd; showing >= showingStart; showing--) {
+	    long start = System.currentTimeMillis();
+	    AkaNanaModel result = search(card1, card2, showing, count);
+	    result.setConfidence(confidence.getConfidence(splitAllowed));
+	    resultList.add(result);
+	    output(result, splitAllowed, System.currentTimeMillis() - start);
+	    confidence.clear();
 	}
 
 	// shutdown executor
@@ -98,19 +72,13 @@ public class AkaNanaInception {
     private AkaNanaModel search(int card1, int card2, int showing, Integer count) {
 	boolean splitAllowed = card1 == card2;
 	String title = parseTitle(card1, card2, showing, count);
-	System.out.println("Running: " + title + " (" + cardToString(card1) + cardToString(card2) + ')');
-
-	if (count != null && count > 0) {
-	    startingPosition += count;
-	}
+	System.out.println("Running: " + title);
 
 	// generate input
-	List<Future<AkaNanaModel>> futureList = new ArrayList<>(capacity);
-	for (int position = startingPosition; position < ENDING_POSITION; position++) {
-	    for (int i = 0; i < trials; i++) {
-		Future<AkaNanaModel> f = es.submit(new InceptionSearch(card1, card2, showing, count, position));
-		futureList.add(f);
-	    }
+	List<Future<AkaNanaModel>> futureList = new ArrayList<>(trials);
+	for (int i = 0; i < trials; i++) {
+	    Future<AkaNanaModel> f = es.submit(new OrganicSearch(card1, card2, showing, count));
+	    futureList.add(f);
 	}
 	status.setFutureList(futureList);
 
@@ -299,7 +267,7 @@ public class AkaNanaInception {
 	    }
 	}
 
-	AkaNanaInception inception = new AkaNanaInception(trials);
+	AkaNanaOrganic inception = new AkaNanaOrganic(trials);
 	inception.run(card1, card2, showingStart, showingEnd, count);
     }
 }

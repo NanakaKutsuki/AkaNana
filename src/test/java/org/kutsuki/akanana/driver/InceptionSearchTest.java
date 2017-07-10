@@ -1,6 +1,7 @@
 package org.kutsuki.akanana.driver;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
@@ -8,13 +9,13 @@ import java.math.BigDecimal;
 import org.junit.Test;
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.action.StrategyUtil;
-import org.kutsuki.akanana.inception.AkaNanaSearch;
+import org.kutsuki.akanana.inception.InceptionSearch;
 import org.kutsuki.akanana.shoe.AbstractShoe;
 import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public class ActionSearchTest {
+public class InceptionSearchTest {
     private static final BigDecimal BET = BigDecimal.TEN;
     private static final int DECKS = 6;
     private static final int PLAYABLE = 4 * DECKS;
@@ -76,7 +77,7 @@ public class ActionSearchTest {
 	    for (int card2 = 2; card2 <= 11; card2++) {
 		for (int showing = 2; showing <= 11; showing++) {
 		    if (!isBlackjack(card1, card2)) {
-			testFindShoeByCards(shoe, card1, 2, showing, DECKS * -2);
+			testFindShoeByCards(shoe, card1, card2, showing, DECKS * -2);
 		    }
 		}
 	    }
@@ -85,7 +86,7 @@ public class ActionSearchTest {
 
     @Test
     public void testForcedActions() {
-	AkaNanaSearch as = new AkaNanaSearch(0, 0, 0, null, 0);
+	InceptionSearch as = new InceptionSearch(0, 0, 0, null, 0);
 	as.setStartingBet(BET);
 	as.setStrategy(BASIC);
 
@@ -309,14 +310,15 @@ public class ActionSearchTest {
 	    for (int rank2 = rank1 + 1; rank2 <= 11; rank2++) {
 		for (int showing = 2; showing <= 11; showing++) {
 		    if (!isBlackjack(rank1, rank2)) {
-			AkaNanaSearch as = new AkaNanaSearch(rank1, rank2, showing, null, POSITION);
+			InceptionSearch as = new InceptionSearch(rank1, rank2, showing, null, POSITION);
 			as.setStartingBet(BET);
 			as.setShoe(new AkaNanaShoe(DECKS, PLAYABLE));
 			as.setStrategy(BASIC);
 
-			as.setBankroll(BigDecimal.ZERO);
-			as.makeBet(BigDecimal.ONE);
 			as.searchShoe();
+			as.setBankroll(BigDecimal.ZERO);
+			as.setStartingBet(BigDecimal.ONE);
+			as.makeBet(BigDecimal.ONE);
 			as.rollbackShoe();
 			as.playerAction(Action.STAND);
 
@@ -328,6 +330,7 @@ public class ActionSearchTest {
 			expectedBankroll = as.getBankroll();
 
 			as.setBankroll(BigDecimal.ZERO);
+			as.setStartingBet(BigDecimal.ONE);
 			as.makeBet(BigDecimal.ONE);
 			as.rollbackShoe();
 			as.playerAction(Action.STAND);
@@ -338,7 +341,7 @@ public class ActionSearchTest {
 			assertEquals("Wrong Card", expectedCard4, as.getDealerHand().getHand().get(1));
 			assertEquals("Wrong Hand Value", expectedValue, as.getPlayerHands().get(0).getValue());
 			assertEquals("Wrong Dealer Showing", showing, as.getDealerHand().showingValue());
-			assertEquals("Wrong Payout", expectedBankroll, as.getBankroll());
+			assertTrue("Wrong Payout", expectedBankroll.compareTo(as.getBankroll()) == 0);
 		    }
 		}
 	    }
@@ -361,7 +364,7 @@ public class ActionSearchTest {
 	}
 
 	if (!hand.isBlackjack()) {
-	    AkaNanaSearch as = new AkaNanaSearch(card1, card2, showing, count, POSITION);
+	    InceptionSearch as = new InceptionSearch(card1, card2, showing, count, POSITION);
 	    as.setShoe(shoe);
 	    as.setStrategy(BASIC);
 	    as.call();
@@ -378,7 +381,7 @@ public class ActionSearchTest {
 
     // testFindShoeByCards
     private void testFindShoeByCards(AbstractShoe shoe, int card1, int card2, int showing, Integer count) {
-	AkaNanaSearch as = new AkaNanaSearch(card1, card2, showing, count, POSITION);
+	InceptionSearch as = new InceptionSearch(card1, card2, showing, count, POSITION);
 	as.setShoe(shoe);
 	as.setStrategy(BASIC);
 	as.call();

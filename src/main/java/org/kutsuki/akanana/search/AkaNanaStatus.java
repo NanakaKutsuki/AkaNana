@@ -1,13 +1,10 @@
-package org.kutsuki.akanana.inception;
+package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
-
-import org.kutsuki.akanana.search.AkaNanaModel;
-import org.kutsuki.akanana.search.AkaNanaSettings;
 
 public class AkaNanaStatus extends Thread {
     private static final long PERIOD = 60 * 1000;

@@ -61,7 +61,7 @@ public class ShoeTest {
     @Test
     public void checkAllCardsAgain() {
 	// reshuffle
-	shoe.checkReshuffle(true);
+	shoe.reshuffle();
 
 	// check all the cards again
 	for (int i = 1; i < (decks * 52) - 4; i += 4) {
@@ -103,7 +103,7 @@ public class ShoeTest {
 	Card expectedCard4 = null;
 	int expectedCount = 0;
 
-	shoe.checkReshuffle(true);
+	shoe.reshuffle();
 
 	for (int i = 0; i < 10; i++) {
 	    shoe.setRollback();

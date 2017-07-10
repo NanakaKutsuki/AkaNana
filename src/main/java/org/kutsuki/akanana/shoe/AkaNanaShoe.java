@@ -4,14 +4,13 @@ public class AkaNanaShoe extends AbstractShoe {
     // Constructor
     public AkaNanaShoe(int decks, int playable) {
 	super(decks, playable);
-	setCount(getDecks() * -2);
-	checkReshuffle(true);
+	reshuffle();
     }
 
     // Constructor
     public AkaNanaShoe(int decks, int playable, int... c) {
 	super(decks, playable, c);
-	setCount(getDecks() * -2);
+	resetCount();
     }
 
     // getNextCard
@@ -48,16 +47,8 @@ public class AkaNanaShoe extends AbstractShoe {
 	return card;
     }
 
-    // reshuffle
     @Override
-    public boolean checkReshuffle(boolean reshuffle) {
-	boolean reshuffled = super.checkReshuffle(reshuffle);
-
-	if (reshuffled) {
-	    // assume we don't count the burn card
-	    setCount(getDecks() * -2);
-	}
-
-	return reshuffled;
+    public void resetCount() {
+	setCount(getDecks() * -2);
     }
 }

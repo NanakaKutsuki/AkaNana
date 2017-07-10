@@ -13,7 +13,7 @@ import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Card;
 import org.kutsuki.akanana.shoe.Hand;
 
-public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
+public class InceptionSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
     private AkaNanaModel model;
 
     private StrategyUtil strategyUtil;
@@ -25,7 +25,7 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
     private int showing;
 
     // constructor
-    public AkaNanaSearch(int card1, int card2, int showing, Integer count, int position) {
+    public InceptionSearch(int card1, int card2, int showing, Integer count, int position) {
 	this.card1 = card1;
 	this.card2 = card2;
 	this.showing = showing;
@@ -105,7 +105,7 @@ public class AkaNanaSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	while (!found) {
 	    playerHand.clear();
 	    getDealerHand().clear();
-	    getShoe().checkReshuffle(true);
+	    getShoe().reshuffle();
 
 	    // if( count != null )
 	    for (int i = 1; i < position; i++) {

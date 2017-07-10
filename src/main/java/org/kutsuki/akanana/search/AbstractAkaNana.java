@@ -61,7 +61,7 @@ public abstract class AbstractAkaNana {
 	dealerHand.clear();
 
 	// check for reshuffle
-	shoe.checkReshuffle(false);
+	shoe.checkReshuffle();
 
 	// deal cards
 	for (int i = 0; i < 2; i++) {

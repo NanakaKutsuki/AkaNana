@@ -19,6 +19,8 @@ public abstract class AbstractShoe {
     private List<Card> shoe;
     private Random random;
 
+    public abstract void resetCount();
+
     public abstract Card getNextCard();
 
     public abstract Card getHiddenCardForDealer();
@@ -104,29 +106,34 @@ public abstract class AbstractShoe {
 	return index;
     }
 
+    // getPlayable
+    public int getPlayable() {
+	return playable;
+    }
+
     // getShoe
     public List<Card> getShoe() {
 	return shoe;
     }
 
-    // reshuffle
-    public boolean checkReshuffle(boolean reshuffle) {
-	boolean reshuffled = false;
-
-	// avg games for 2 deck 80 and other players is 9.95
-	if (index > playable || reshuffle) {
-	    Collections.shuffle(shoe, random);
-	    index = 0;
-	    rollback = 0;
-	    count = 0;
-	    hiddenPoint = 0;
-
-	    // burn one card, don't count it
-	    getCard();
-	    reshuffled = true;
+    // checkReshuffle
+    public void checkReshuffle() {
+	if (index > playable) {
+	    reshuffle();
 	}
+    }
 
-	return reshuffled;
+    // reshuffle
+    public void reshuffle() {
+	// avg games for 2 deck 80 and other players is 9.95
+	Collections.shuffle(shoe, random);
+	index = 0;
+	rollback = 0;
+	resetCount();
+	hiddenPoint = 0;
+
+	// burn one card, don't count it
+	getCard();
     }
 
     // rollback
