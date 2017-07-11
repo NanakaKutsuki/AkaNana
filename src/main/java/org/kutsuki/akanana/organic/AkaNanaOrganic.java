@@ -34,14 +34,8 @@ public class AkaNanaOrganic {
     public AkaNanaOrganic(int trials) {
 	this.confidence = new AkaNanaConfidence(trials);
 	this.es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	this.status = new AkaNanaStatus(trials);
 	this.trials = trials;
-
-	// execute status timer
-	this.status = new AkaNanaStatus();
-
-	if (trials >= 200000) {
-	    this.es.execute(status);
-	}
 
 	if (!OUTPUT_DIR.exists()) {
 	    OUTPUT_DIR.mkdir();
@@ -56,14 +50,13 @@ public class AkaNanaOrganic {
 	for (int showing = showingEnd; showing >= showingStart; showing--) {
 	    long start = System.currentTimeMillis();
 	    AkaNanaModel result = search(card1, card2, showing, count);
-	    result.setConfidence(confidence.getConfidence(splitAllowed));
+	    result.setConfidence(confidence.getConfidence());
 	    resultList.add(result);
 	    output(result, splitAllowed, System.currentTimeMillis() - start);
 	    confidence.clear();
 	}
 
 	// shutdown executor
-	status.shutdown();
 	es.shutdown();
 
 	outputCsv(resultList, splitAllowed);
@@ -74,33 +67,40 @@ public class AkaNanaOrganic {
 	String title = parseTitle(card1, card2, showing, count);
 	System.out.println("Running: " + title);
 
-	// generate input
-	List<Future<AkaNanaModel>> futureList = new ArrayList<>(trials);
-	for (int i = 0; i < trials; i++) {
-	    Future<AkaNanaModel> f = es.submit(new OrganicSearch(card1, card2, showing, count));
-	    futureList.add(f);
-	}
-	status.setFutureList(futureList);
+	int subTrials = BigDecimal.valueOf(trials).divide(AkaNanaSettings.THOUSAND, 0, RoundingMode.HALF_UP).intValue();
 
-	// map
+	// generate input
+	List<Future<AkaNanaModel>> futureList = new ArrayList<>(1000);
 	AkaNanaModel result = new AkaNanaModel();
 	result.setTitle(title);
-
-	for (Future<AkaNanaModel> future : futureList) {
-	    try {
-		// collect result
-		AkaNanaModel model = future.get();
-		confidence.add(model);
-
-		// reduce result
-		result.merge(model, splitAllowed);
-	    } catch (InterruptedException e) {
-		e.printStackTrace();
-	    } catch (ExecutionException e) {
-		e.printStackTrace();
+	status.reset();
+	for (int i = 0; i < subTrials; i++) {
+	    futureList.clear();
+	    for (int j = 0; j < 1000; j++) {
+		Future<AkaNanaModel> f = es.submit(new OrganicSearch(card1, card2, showing, count));
+		futureList.add(f);
 	    }
+
+	    // map
+	    for (Future<AkaNanaModel> future : futureList) {
+		try {
+		    // collect result
+		    AkaNanaModel model = future.get();
+		    confidence.add(model, splitAllowed);
+
+		    // reduce result
+		    result.merge(model, splitAllowed);
+		    status.complete();
+		} catch (InterruptedException e) {
+		    e.printStackTrace();
+		} catch (ExecutionException e) {
+		    e.printStackTrace();
+		}
+	    }
+
 	}
 
+	confidence.addResult(splitAllowed);
 	return result;
     }
 
@@ -226,7 +226,7 @@ public class AkaNanaOrganic {
 	int showingStart = 2;
 	int showingEnd = 11;
 	Integer count = null;
-	int trials = 10000;
+	int trials = 100000;
 
 	try {
 	    card1 = Integer.parseInt(args[0]);

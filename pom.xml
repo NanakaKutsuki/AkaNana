@@ -40,7 +40,7 @@
 					<transformers>
 						<transformer
 							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-							<mainClass>org.kutsuki.akanana.inception.AkaNanaInception</mainClass>
+							<mainClass>org.kutsuki.akanana.organic.AkaNanaOrganic</mainClass>
 						</transformer>
 					</transformers>
 				</configuration>

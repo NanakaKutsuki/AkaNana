@@ -2,61 +2,36 @@ package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Future;
 
-public class AkaNanaStatus extends Thread {
+public class AkaNanaStatus {
     private static final long PERIOD = 60 * 1000;
 
-    private boolean shutdown;
-    private List<Future<AkaNanaModel>> futureList;
+    private int completed;
+    private int trials;
     private long start;
-    private Object lock;
+    private long timeout;
 
-    public AkaNanaStatus() {
-	this.futureList = Collections.emptyList();
-	this.lock = new Object();
-	this.shutdown = false;
-	this.start = 0;
+    public AkaNanaStatus(int trials) {
+	this.trials = trials;
+	reset();
     }
 
-    @Override
-    public void run() {
-	while (!shutdown) {
-	    long timeout = System.currentTimeMillis() + PERIOD;
-	    while (!shutdown && System.currentTimeMillis() < timeout) {
-		try {
-		    sleep(1000);
-		} catch (InterruptedException e) {
-		    // do nothing
-		}
-	    }
+    public void complete() {
+	this.completed++;
 
-	    synchronized (lock) {
-		int completed = 0;
-
-		for (Future<AkaNanaModel> f : futureList) {
-		    if (f.isDone()) {
-			completed++;
-		    }
-		}
-
-		if (completed > 0 && completed < futureList.size()) {
-		    printStatus(completed);
-		}
-	    }
-
+	if (System.currentTimeMillis() > timeout) {
+	    printStatus();
+	    timeout = System.currentTimeMillis() + PERIOD;
 	}
     }
 
-    private void printStatus(int completed) {
+    private void printStatus() {
 	BigDecimal elapsedTime = BigDecimal.valueOf(System.currentTimeMillis() - start);
 	BigDecimal rate = BigDecimal.valueOf(completed).divide(elapsedTime, 4, RoundingMode.HALF_UP)
 		.multiply(AkaNanaSettings.THOUSAND).setScale(0, RoundingMode.HALF_UP);
 
 	if (rate.compareTo(BigDecimal.ZERO) == 1) {
-	    BigDecimal remainingTime = elapsedTime.multiply(BigDecimal.valueOf(futureList.size()))
+	    BigDecimal remainingTime = elapsedTime.multiply(BigDecimal.valueOf(trials))
 		    .divide(BigDecimal.valueOf(completed), 2, RoundingMode.HALF_UP).subtract(elapsedTime);
 
 	    StringBuilder sb = new StringBuilder();
@@ -69,14 +44,9 @@ public class AkaNanaStatus extends Thread {
 	}
     }
 
-    public void setFutureList(List<Future<AkaNanaModel>> futureList) {
-	synchronized (lock) {
-	    this.futureList = futureList;
-	    this.start = System.currentTimeMillis();
-	}
-    }
-
-    public void shutdown() {
-	this.shutdown = true;
+    public void reset() {
+	this.completed = 0;
+	this.start = System.currentTimeMillis();
+	timeout = start + PERIOD;
     }
 }
