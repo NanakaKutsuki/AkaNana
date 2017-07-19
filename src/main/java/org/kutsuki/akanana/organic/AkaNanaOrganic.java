@@ -17,6 +17,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.kutsuki.akanana.action.Action;
 import org.kutsuki.akanana.search.AkaNanaConfidence;
 import org.kutsuki.akanana.search.AkaNanaModel;
@@ -24,6 +26,8 @@ import org.kutsuki.akanana.search.AkaNanaSettings;
 import org.kutsuki.akanana.search.AkaNanaStatus;
 
 public class AkaNanaOrganic {
+    private static final Logger LOGGER = LogManager.getLogger(AkaNanaOrganic.class);
+
     private static final File OUTPUT_DIR = new File("output");
 
     private AkaNanaConfidence confidence;
@@ -65,7 +69,7 @@ public class AkaNanaOrganic {
     private AkaNanaModel search(int card1, int card2, int showing, Integer count) {
 	boolean splitAllowed = card1 == card2;
 	String title = parseTitle(card1, card2, showing, count);
-	System.out.println("Running: " + title);
+	LOGGER.info("Running: " + title);
 
 	int subTrials = BigDecimal.valueOf(trials).divide(AkaNanaSettings.THOUSAND, 0, RoundingMode.HALF_UP).intValue();
 
@@ -143,36 +147,26 @@ public class AkaNanaOrganic {
     }
 
     private void output(AkaNanaModel model, boolean splitAllowed, long runtime) {
-	try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, model.getTitle() + ".txt")));) {
-	    String search = "Search: " + model.getTitle() + " Confidence: " + model.getConfidence();
-	    System.out.println(search);
-	    bw.write(search);
-	    bw.newLine();
+	String search = "Search: " + model.getTitle() + " Confidence: " + model.getConfidence();
+	LOGGER.info(search);
 
-	    Map<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
-	    treeMap.put(model.getDoubleDown(), Action.DOUBLE_DOWN);
-	    treeMap.put(model.getHit(), Action.HIT);
-	    treeMap.put(model.getStand(), Action.STAND);
-	    treeMap.put(model.getSurrender(), Action.SURRENDER);
+	Map<BigDecimal, Action> treeMap = new TreeMap<>(Collections.reverseOrder());
+	treeMap.put(model.getDoubleDown(), Action.DOUBLE_DOWN);
+	treeMap.put(model.getHit(), Action.HIT);
+	treeMap.put(model.getStand(), Action.STAND);
+	treeMap.put(model.getSurrender(), Action.SURRENDER);
 
-	    if (splitAllowed) {
-		treeMap.put(model.getSplit(), Action.SPLIT);
-	    }
-
-	    for (Entry<BigDecimal, Action> entry : treeMap.entrySet()) {
-		String result = entry.getValue().toString() + ": " + entry.getKey().setScale(0, RoundingMode.HALF_UP);
-		System.out.println(result);
-		bw.write(result);
-		bw.newLine();
-	    }
-
-	    String footer = "Runtime: " + AkaNanaSettings.formatTime(runtime);
-	    System.out.println(footer);
-	    bw.write(footer);
-	    bw.newLine();
-	} catch (IOException e) {
-	    e.printStackTrace();
+	if (splitAllowed) {
+	    treeMap.put(model.getSplit(), Action.SPLIT);
 	}
+
+	for (Entry<BigDecimal, Action> entry : treeMap.entrySet()) {
+	    String result = entry.getValue().toString() + ": " + entry.getKey().setScale(0, RoundingMode.HALF_UP);
+	    LOGGER.info(result);
+	}
+
+	String footer = "Runtime: " + AkaNanaSettings.formatTime(runtime);
+	LOGGER.info(footer);
     }
 
     private void outputCsv(List<AkaNanaModel> resultList, boolean splitAllowed) {
@@ -188,7 +182,7 @@ public class AkaNanaOrganic {
 	    sb.append("Split").append(',');
 	    sb.append("Confidence").append(',');
 	    sb.append("Suggestion");
-	    System.out.println(sb.toString());
+	    LOGGER.info(sb.toString());
 	    bw.write(sb.toString());
 	    bw.newLine();
 
@@ -207,7 +201,7 @@ public class AkaNanaOrganic {
 		sb.append(',').append(result.getConfidence());
 		sb.append(',').append(result.getTopAction(splitAllowed));
 
-		System.out.println(sb.toString());
+		LOGGER.info(sb.toString());
 		bw.write(sb.toString());
 		bw.newLine();
 	    }

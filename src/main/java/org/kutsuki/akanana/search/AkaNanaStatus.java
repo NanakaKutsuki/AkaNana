@@ -3,7 +3,11 @@ package org.kutsuki.akanana.search;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class AkaNanaStatus {
+    private static final Logger LOGGER = LogManager.getLogger(AkaNanaStatus.class);
     private static final long PERIOD = 60 * 1000;
 
     private int completed;
@@ -38,9 +42,9 @@ public class AkaNanaStatus {
 	    sb.append("Completed: ").append(completed);
 	    sb.append(", Rate: ").append(rate).append("a/s");
 	    sb.append(", Time Left: ").append(AkaNanaSettings.formatTime(remainingTime.longValue()));
-	    System.out.println(sb.toString());
+	    LOGGER.info(sb.toString());
 	} else {
-	    System.out.println("Completed: " + completed + ", Rate: ?, Time Left: ?");
+	    LOGGER.warn("Completed: " + completed + ", Rate: ?, Time Left: ?");
 	}
     }
 
