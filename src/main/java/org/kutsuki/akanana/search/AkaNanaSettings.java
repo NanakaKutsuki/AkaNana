@@ -23,20 +23,29 @@ public final class AkaNanaSettings {
 	StringBuilder sb = new StringBuilder();
 
 	BigDecimal bd = new BigDecimal(ms);
-	BigDecimal seconds = bd.divide(THOUSAND, 0, RoundingMode.HALF_UP).remainder(SIXTY);
-	BigDecimal minutes = bd.divide(THOUSAND.multiply(SIXTY), 0, RoundingMode.HALF_UP).remainder(SIXTY);
-	BigDecimal hours = bd.divide(THOUSAND.multiply(SIXTY).multiply(SIXTY), 0, RoundingMode.HALF_UP)
+	BigDecimal days = bd.divide(THOUSAND.multiply(SIXTY).multiply(SIXTY).multiply(TWENTY_FOUR), 0,
+		RoundingMode.FLOOR);
+	BigDecimal hours = bd.divide(THOUSAND.multiply(SIXTY).multiply(SIXTY), 0, RoundingMode.FLOOR)
 		.remainder(TWENTY_FOUR);
 
-	if (hours.compareTo(BigDecimal.ZERO) == 1) {
+	boolean isDay = days.compareTo(BigDecimal.ZERO) == 1;
+	boolean isHour = hours.compareTo(BigDecimal.ZERO) == 1;
+
+	if (isDay) {
+	    sb.append(days).append('d').append(' ');
+	}
+
+	if (isHour) {
 	    sb.append(hours).append('h').append(' ');
 	}
 
-	if (minutes.compareTo(BigDecimal.ZERO) == 1) {
+	if (!isDay) {
+	    BigDecimal minutes = bd.divide(THOUSAND.multiply(SIXTY), 0, RoundingMode.FLOOR).remainder(SIXTY);
 	    sb.append(minutes).append('m').append(' ');
 	}
 
-	if (hours.compareTo(BigDecimal.ZERO) <= 0) {
+	if (!isDay && !isHour) {
+	    BigDecimal seconds = bd.divide(THOUSAND, 0, RoundingMode.HALF_UP).remainder(SIXTY);
 	    sb.append(seconds).append('s');
 	}
 
