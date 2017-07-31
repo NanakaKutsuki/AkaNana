@@ -254,7 +254,7 @@ public class AkaNanaOrganic {
 	    }
 	}
 
-	AkaNanaOrganic inception = new AkaNanaOrganic(trials);
-	inception.run(card1, card2, showingStart, showingEnd, count);
+	AkaNanaOrganic organic = new AkaNanaOrganic(trials);
+	organic.run(card1, card2, showingStart, showingEnd, count);
     }
 }
