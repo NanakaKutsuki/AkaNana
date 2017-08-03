@@ -59,6 +59,10 @@ public class TwoStrategyUtil extends AbstractStrategyUtil {
 		// A5v3@1 -$206,560 $9,476 $7,872 -$500,000 52% HIT
 		// A5v3@2 -$190,366 $13,812 $18,172 -$500,000 64% DOUBLE DOWN
 		action = Action.DOUBLE_DOWN;
+	    } else if (getCount() >= 4 && getSoft() == 4 && getShowing() == 3) {
+		// A4v3@2 -$193,844 $30,048 $22,606 -$500,000 76% HIT
+		// A4v3@3 -$175,972 $34,932 $35,286 -$500,000 50% DOUBLE DOWN
+		action = Action.DOUBLE_DOWN;
 	    } else if (getCount() >= -1 && getSoft() == 3 && getShowing() == 4) {
 		// A3v4@-1 -$186,118 $85,382 $84,208 -$500,000 52% HIT
 		// A3v4@0 -$170,486 $88,297 $96,064 -$500,000 76% DOUBLE DOWN
