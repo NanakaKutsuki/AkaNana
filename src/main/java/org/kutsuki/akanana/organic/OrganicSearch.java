@@ -4,17 +4,12 @@ import java.math.BigDecimal;
 import java.util.concurrent.Callable;
 
 import org.kutsuki.akanana.action.Action;
-import org.kutsuki.akanana.action.StrategyUtil;
 import org.kutsuki.akanana.search.AbstractAkaNana;
 import org.kutsuki.akanana.search.AkaNanaModel;
-import org.kutsuki.akanana.search.AkaNanaSettings;
-import org.kutsuki.akanana.shoe.AkaNanaShoe;
 import org.kutsuki.akanana.shoe.Hand;
 
 public class OrganicSearch extends AbstractAkaNana implements Callable<AkaNanaModel> {
     private AkaNanaModel model;
-
-    private StrategyUtil strategyUtil;
 
     private Integer count;
     private int card1;
@@ -29,22 +24,19 @@ public class OrganicSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	this.count = count;
     }
 
-    @Override
-    public StrategyUtil getStrategyUtil() {
-	return strategyUtil;
-    }
-
     // call
     @Override
     public AkaNanaModel call() {
 	this.model = new AkaNanaModel();
 
 	if (getShoe() == null) {
-	    setShoe(new AkaNanaShoe(AkaNanaSettings.DECKS, AkaNanaSettings.PLAYABLE));
+	    // TODO add preset
+	    throw new IllegalArgumentException("Shoe must be preset!");
 	}
 
-	if (strategyUtil == null) {
-	    this.strategyUtil = new StrategyUtil(AkaNanaSettings.DECKS, true);
+	if (getStrategyUtil() == null) {
+	    // TODO add preset2
+	    throw new IllegalArgumentException("StrategyUtil must be preset!");
 	}
 
 	// play until cards are found
@@ -167,9 +159,5 @@ public class OrganicSearch extends AbstractAkaNana implements Callable<AkaNanaMo
 	getDealerHand().addCard(getShoe().getHiddenCardForDealer());
 	playerHand.addCard(getShoe().getNextCard());
 	getDealerHand().addCard(getShoe().getNextCard());
-    }
-
-    public void setStrategy(StrategyUtil strategyUtil) {
-	this.strategyUtil = strategyUtil;
     }
 }

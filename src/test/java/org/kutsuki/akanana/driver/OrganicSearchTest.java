@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 import org.kutsuki.akanana.action.Action;
-import org.kutsuki.akanana.action.StrategyUtil;
 import org.kutsuki.akanana.organic.OrganicSearch;
 import org.kutsuki.akanana.shoe.AbstractShoe;
 import org.kutsuki.akanana.shoe.AkaNanaShoe;
@@ -19,7 +18,6 @@ public class OrganicSearchTest {
     private static final BigDecimal BET = BigDecimal.TEN;
     private static final int DECKS = 6;
     private static final int PLAYABLE = 4 * DECKS;
-    private static final StrategyUtil BASIC = new StrategyUtil(DECKS, true);
 
     @Test
     public void testFindShoeByValue() {
@@ -85,7 +83,7 @@ public class OrganicSearchTest {
     public void testForcedActions() {
 	OrganicSearch os = new OrganicSearch(0, 0, 0, null);
 	os.setStartingBet(BET);
-	os.setStrategy(BASIC);
+	os.setStrategyUtil(DECKS, true);
 
 	// Forced Stand Player Win by dealer bust
 	os.setShoe(new AkaNanaShoe(DECKS, PLAYABLE, 10, 10, 3, 4, 10));
@@ -310,7 +308,7 @@ public class OrganicSearchTest {
 			OrganicSearch as = new OrganicSearch(rank1, rank2, showing, null);
 			as.setStartingBet(BET);
 			as.setShoe(new AkaNanaShoe(DECKS, PLAYABLE));
-			as.setStrategy(BASIC);
+			as.setStrategyUtil(DECKS, true);
 
 			as.searchShoe();
 
@@ -364,7 +362,7 @@ public class OrganicSearchTest {
 	if (!hand.isBlackjack()) {
 	    OrganicSearch os = new OrganicSearch(card1, card2, showing, count);
 	    os.setShoe(shoe);
-	    os.setStrategy(BASIC);
+	    os.setStrategyUtil(DECKS, true);
 	    os.call();
 
 	    assertEquals("Wrong player value", hand.getValue(), os.getPlayerHands().get(0).getValue());
@@ -381,7 +379,7 @@ public class OrganicSearchTest {
     private void testFindShoeByCards(AbstractShoe shoe, int card1, int card2, int showing, Integer count) {
 	OrganicSearch os = new OrganicSearch(card1, card2, showing, count);
 	os.setShoe(shoe);
-	os.setStrategy(BASIC);
+	os.setStrategyUtil(DECKS, true);
 	os.call();
 
 	if (!((os.getPlayerHands().get(0).getCardValue1() == card1

@@ -42,10 +42,10 @@ public abstract class AbstractShoe {
 		Card d = new Card(j, 'd');
 		Card h = new Card(j, 'h');
 		Card s = new Card(j, 's');
-		shoe.add(c);
-		shoe.add(d);
-		shoe.add(h);
-		shoe.add(s);
+		this.shoe.add(c);
+		this.shoe.add(d);
+		this.shoe.add(h);
+		this.shoe.add(s);
 	    }
 	}
     }
@@ -125,7 +125,7 @@ public abstract class AbstractShoe {
 
     // reshuffle
     public void reshuffle() {
-	// avg games for 2 deck 80 and other players is 9.95
+	// avg games for 2 deck 72
 	Collections.shuffle(shoe, random);
 	index = 0;
 	rollback = 0;

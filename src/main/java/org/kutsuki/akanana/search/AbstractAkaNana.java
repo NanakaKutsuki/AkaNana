@@ -13,9 +13,12 @@ import org.kutsuki.akanana.shoe.Hand;
 
 public abstract class AbstractAkaNana {
     private static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5");
+    private static final BigDecimal ONE_AND_A_QUARTER = new BigDecimal("1.25");
     private static final BigDecimal TWO = new BigDecimal(2);
 
     private AbstractShoe shoe;
+    private boolean hitSoft17;
+    private boolean sixOverFive;
     private boolean optimal;
     private BigDecimal bankroll;
     private BigDecimal bet;
@@ -24,16 +27,16 @@ public abstract class AbstractAkaNana {
     private Hand dealerHand;
     private List<Hand> playerHands;
     private List<List<Hand>> otherPlayers;
-
-    public abstract StrategyUtil getStrategyUtil();
+    private StrategyUtil strategyUtil;
 
     public AbstractAkaNana() {
 	this.dealerHand = new Hand();
+	this.hitSoft17 = false;
 	this.optimal = false;
 	this.otherPlayers = new ArrayList<>();
 	this.playerHands = new ArrayList<>();
+	this.sixOverFive = false;
 
-	this.playerHands = new ArrayList<>();
 	for (int i = 0; i < AkaNanaSettings.MAX_HANDS; i++) {
 	    playerHands.add(new Hand());
 	}
@@ -98,7 +101,7 @@ public abstract class AbstractAkaNana {
 
 	// only play out dealer hand if live cards
 	if (isDealerPlayable()) {
-	    if (!AkaNanaSettings.HIT_SOFT_17) {
+	    if (!hitSoft17) {
 		while (dealerHand.getValue() < 17) {
 		    dealerHand.addCard(shoe.getNextCard());
 		}
@@ -118,7 +121,11 @@ public abstract class AbstractAkaNana {
 	// dealer blackjack
 	if (playerHands.get(0).isBlackjack()) {
 	    if (!dealerHand.isBlackjack()) {
-		bankroll = bankroll.add(bet.multiply(ONE_AND_A_HALF));
+		if (sixOverFive) {
+		    bankroll = bankroll.add(bet.multiply(ONE_AND_A_QUARTER));
+		} else {
+		    bankroll = bankroll.add(bet.multiply(ONE_AND_A_HALF));
+		}
 	    }
 	    bankroll = bankroll.add(bet);
 
@@ -298,6 +305,26 @@ public abstract class AbstractAkaNana {
 	return shoe;
     }
 
+    // getStrategyUtil
+    public StrategyUtil getStrategyUtil() {
+	return strategyUtil;
+    }
+
+    // getTotalBet
+    public BigDecimal getTotalBet() {
+	return totalBet;
+    }
+
+    // setHitSoft17
+    public void setHitSoft17(boolean hitSoft17) {
+	this.hitSoft17 = hitSoft17;
+    }
+
+    // setSixOverFive
+    public void setSixOverFive(boolean sixOverFive) {
+	this.sixOverFive = sixOverFive;
+    }
+
     // setShoe
     public void setShoe(AbstractShoe shoe) {
 	this.shoe = shoe;
@@ -308,8 +335,8 @@ public abstract class AbstractAkaNana {
 	this.startingBet = startingBet;
     }
 
-    // getTotalBet
-    public BigDecimal getTotalBet() {
-	return totalBet;
+    // setStrategyUtil
+    public void setStrategyUtil(int decks, boolean surrenderAllowed) {
+	this.strategyUtil = new StrategyUtil(decks, surrenderAllowed);
     }
 }

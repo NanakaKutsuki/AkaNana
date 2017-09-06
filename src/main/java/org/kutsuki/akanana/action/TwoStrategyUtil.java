@@ -106,9 +106,11 @@ public class TwoStrategyUtil extends AbstractStrategyUtil {
 	} else if (getValue() >= 8 && getValue() <= 11) {
 	    if (getCount() >= 1 && getValue() == 10 && (getShowing() == 10 || getShowing() == 11)) {
 		// 10vA@0 -$639,070, $99,336, $86,202, -$500,000, 87%, HIT
-		// 10vA@1 -$629,878, $109,821, $121,924, -$500,000, 80%, DOUBLE DOWN
+		// 10vA@1 -$629,878, $109,821, $121,924, -$500,000, 80%, DOUBLE
+		// DOWN
 		// 10vT@0 -$5,409,014, $327,633, $296,484, -$5,000,000, 72%, HIT
-		// 10vT@1 -$5,456,526, $361,897, $431,894, -$5,000,000, 95%, DOUBLE DOWN
+		// 10vT@1 -$5,456,526, $361,897, $431,894, -$5,000,000, 95%,
+		// DOUBLE DOWN
 		return Action.DOUBLE_DOWN;
 	    } else if (getCount() >= 2 && getValue() == 9 && getShowing() == 7) {
 		// 9v7@1 -$478,848 $198,485 $189,928 -$500,000 71% HIT
