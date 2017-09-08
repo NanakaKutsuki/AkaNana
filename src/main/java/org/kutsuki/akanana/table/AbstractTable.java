@@ -5,7 +5,6 @@ import java.util.TreeMap;
 
 import org.kutsuki.akanana.search.AbstractAkaNana;
 import org.kutsuki.akanana.search.AkaNanaSettings;
-import org.kutsuki.akanana.shoe.AkaNanaShoe;
 
 public abstract class AbstractTable extends AbstractAkaNana {
     private long startTime;
@@ -14,17 +13,13 @@ public abstract class AbstractTable extends AbstractAkaNana {
 
     public abstract void determineBet();
 
-    public AbstractTable(long trials, int decks, int playable, boolean surrenderAllowed, boolean hitSoft17,
-	    boolean sixOverFive) {
+    public abstract void offerInsurance();
+
+    public AbstractTable(long trials) {
 	this.resultMap = new TreeMap<Integer, TableResult>();
 	this.startTime = System.currentTimeMillis();
 	this.trials = trials;
-
 	setBankroll(BigDecimal.ZERO);
-	setHitSoft17(hitSoft17);
-	setSixOverFive(sixOverFive);
-	setShoe(new AkaNanaShoe(decks, playable));
-	setStrategyUtil(decks, surrenderAllowed);
     }
 
     public void run() {
@@ -34,7 +29,7 @@ public abstract class AbstractTable extends AbstractAkaNana {
 
 	for (long i = 0; i < trials; i++) {
 	    if ((i + 1) % (trials * .1) == 0) {
-		System.out.println((i + 1) + ". completed!");
+		System.out.println((i + 1) + " completed!");
 	    }
 
 	    startingCount = getShoe().getCount();
@@ -42,6 +37,8 @@ public abstract class AbstractTable extends AbstractAkaNana {
 
 	    determineBet();
 	    distributeCards();
+	    offerInsurance();
+	    otherPlayerAction();
 	    playerAction(null);
 
 	    result = resultMap.get(startingCount);
@@ -63,7 +60,7 @@ public abstract class AbstractTable extends AbstractAkaNana {
 	    bankroll = bankroll.add(tr.getBankroll());
 	}
 
-	System.out.println(bankroll);
+	System.out.println("Total Bankroll: " + bankroll);
 	System.out.println(AkaNanaSettings.formatTime(System.currentTimeMillis() - startTime));
     }
 }

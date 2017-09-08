@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public final class AkaNanaSettings {
-    public static final int MAX_HANDS = 4;
-
     public static final int TRIALS = 1000000;
     public static final int PLAYABLE = 80;
 

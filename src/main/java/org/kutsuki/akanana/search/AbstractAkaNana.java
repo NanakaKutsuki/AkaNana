@@ -1,6 +1,7 @@
 package org.kutsuki.akanana.search;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +25,7 @@ public abstract class AbstractAkaNana {
     private BigDecimal bet;
     private BigDecimal startingBet;
     private BigDecimal totalBet;
+    private int maxHands;
     private Hand dealerHand;
     private List<Hand> playerHands;
     private List<List<Hand>> otherPlayers;
@@ -37,9 +39,7 @@ public abstract class AbstractAkaNana {
 	this.playerHands = new ArrayList<>();
 	this.sixOverFive = false;
 
-	for (int i = 0; i < AkaNanaSettings.MAX_HANDS; i++) {
-	    playerHands.add(new Hand());
-	}
+	setMaxHands(4);
     }
 
     // makeBet
@@ -81,6 +81,22 @@ public abstract class AbstractAkaNana {
 		dealerHand.addCard(shoe.getHiddenCardForDealer());
 	    } else {
 		dealerHand.addCard(shoe.getNextCard());
+	    }
+	}
+    }
+
+    // takeInsurance
+    public void takeInsurance() {
+	playerHands.get(0).setInsurance(true);
+	bankroll = bankroll.subtract(bet.divide(TWO, 2, RoundingMode.HALF_UP));
+	totalBet = totalBet.add(bet.divide(TWO, 2, RoundingMode.HALF_UP));
+    }
+
+    // otherPlayerAction
+    public void otherPlayerAction() {
+	if (!dealerHand.isBlackjack()) {
+	    for (List<Hand> otherHands : otherPlayers) {
+		otherAction(otherHands);
 	    }
 	}
     }
@@ -200,6 +216,64 @@ public abstract class AbstractAkaNana {
 	return playable;
     }
 
+    // otherAction
+    private void otherAction(List<Hand> otherHands) {
+	int numHands = 1;
+
+	for (int i = 0; i < otherHands.size(); i++) {
+	    Hand hand = otherHands.get(i);
+
+	    if (i == 0 || hand.isSplit()) {
+		Action action = Action.HIT;
+
+		// hit a card for splits
+		if (hand.isSplit()) {
+		    hand.addCard(shoe.getNextCard());
+
+		    if (hand.getCardValue1() == 11) {
+			action = Action.STAND;
+		    }
+		}
+
+		int j = 1;
+		while (!action.equals(Action.STAND) && !action.equals(Action.DOUBLE_DOWN)
+			&& !action.equals(Action.SURRENDER) && hand.getValue() < 22) {
+		    if (optimal) {
+			// optimal play
+			action = getStrategyUtil().getAction(hand, dealerHand.showingValue(), numHands == maxHands,
+				shoe.getCount());
+		    } else {
+			// basic strategy play
+			action = getStrategyUtil().getAction(hand, dealerHand.showingValue(), numHands == maxHands,
+				-100);
+		    }
+
+		    if (action.equals(Action.HIT)) {
+			hand.addCard(shoe.getNextCard());
+		    } else if (action.equals(Action.DOUBLE_DOWN)) {
+			hand.addCard(shoe.getNextCard());
+			hand.setDoubleDown(true);
+		    } else if (action.equals(Action.SURRENDER)) {
+			hand.setSurrender(true);
+		    } else if (action.equals(Action.SPLIT)) {
+			Card split = hand.getHand().remove(1);
+			otherHands.get(i + j).addCard(split);
+			otherHands.get(i + j).setSplit(true);
+			numHands++;
+			j++;
+
+			hand.addCard(shoe.getNextCard());
+			hand.setSplit(true);
+
+			if (hand.getCardValue1() == 11) {
+			    action = Action.STAND;
+			}
+		    }
+		}
+	    }
+	}
+    }
+
     // playAction
     private void playAction(Action forcedAction) {
 	int numHands = 1;
@@ -227,18 +301,18 @@ public abstract class AbstractAkaNana {
 			action = forcedAction;
 			first = false;
 		    } else if (first && forcedAction != null && hand.isPair() && hand.isSplit()
-			    && numHands < AkaNanaSettings.MAX_HANDS) {
+			    && numHands < maxHands) {
 			action = forcedAction;
 			first = false;
 		    } else {
 			if (optimal) {
 			    // optimal play
-			    action = getStrategyUtil().getAction(hand, dealerHand.showingValue(),
-				    numHands == AkaNanaSettings.MAX_HANDS, shoe.getCount());
+			    action = getStrategyUtil().getAction(hand, dealerHand.showingValue(), numHands == maxHands,
+				    shoe.getCount());
 			} else {
 			    // basic strategy play
-			    action = getStrategyUtil().getAction(hand, dealerHand.showingValue(),
-				    numHands == AkaNanaSettings.MAX_HANDS, -100);
+			    action = getStrategyUtil().getAction(hand, dealerHand.showingValue(), numHands == maxHands,
+				    -100);
 			}
 		    }
 
@@ -280,19 +354,33 @@ public abstract class AbstractAkaNana {
 	return bankroll;
     }
 
-    // setBankroll
-    public void setBankroll(BigDecimal bankroll) {
-	this.bankroll = bankroll;
-    }
-
     // getDealerHand
     public Hand getDealerHand() {
 	return dealerHand;
     }
 
+    // setBankroll
+    public void setBankroll(BigDecimal bankroll) {
+	this.bankroll = bankroll;
+    }
+
+    // setBankroll
+    public void setMaxHands(int maxHands) {
+	this.maxHands = maxHands;
+
+	for (int i = 0; i < maxHands; i++) {
+	    playerHands.add(new Hand());
+	}
+    }
+
     // setOptimal
     public void setOptimal(boolean optimal) {
 	this.optimal = optimal;
+    }
+
+    // getOtherPlayers
+    public List<List<Hand>> getOtherPlayers() {
+	return otherPlayers;
     }
 
     // getPlayerHands
@@ -318,6 +406,11 @@ public abstract class AbstractAkaNana {
     // setHitSoft17
     public void setHitSoft17(boolean hitSoft17) {
 	this.hitSoft17 = hitSoft17;
+    }
+
+    // getOtherPlayers
+    public void setOtherPlayers(List<List<Hand>> otherPlayers) {
+	this.otherPlayers = otherPlayers;
     }
 
     // setSixOverFive

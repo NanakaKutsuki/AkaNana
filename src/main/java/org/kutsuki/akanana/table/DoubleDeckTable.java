@@ -2,16 +2,18 @@ package org.kutsuki.akanana.table;
 
 import java.math.BigDecimal;
 
+import org.kutsuki.akanana.shoe.AkaNanaShoe;
+
 public class DoubleDeckTable extends AbstractTable {
     private static final boolean SURRENDER_ALLOWED = false;
-    private static final boolean HIT_SOFT_17 = false;
-    private static final boolean SIX_OVER_FIVE = false;
     private static final int DECKS = 2;
-    private static final int PLAYABLE = 80;
+    private static final int PLAYABLE = 72;
     private static final long TRIALS = 100000000L;
 
     public DoubleDeckTable() {
-	super(TRIALS, DECKS, PLAYABLE, SURRENDER_ALLOWED, HIT_SOFT_17, SIX_OVER_FIVE);
+	super(TRIALS);
+	setShoe(new AkaNanaShoe(DECKS, PLAYABLE));
+	setStrategyUtil(DECKS, SURRENDER_ALLOWED);
     }
 
     public static void main(String[] args) {
@@ -27,6 +29,13 @@ public class DoubleDeckTable extends AbstractTable {
 	    makeBet(BigDecimal.ONE.add(BigDecimal.ONE));
 	} else {
 	    makeBet(BigDecimal.ONE);
+	}
+    }
+
+    @Override
+    public void offerInsurance() {
+	if (getShoe().getCount() >= 1) {
+	    takeInsurance();
 	}
     }
 }
